@@ -16,7 +16,6 @@ function update(dt)
 end
 
 function draw()
-    
     local w, h = love.graphics.getWidth(), love.graphics.getHeight()
     local originalWidth = titleImage:getWidth()
     local targetWidth = w * 0.5
