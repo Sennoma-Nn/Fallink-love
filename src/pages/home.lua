@@ -15,7 +15,7 @@ local buttons = {
         size = 80,
         name = "Test Level - 1",
         description = "Test",
-        icon = nil,
+        icon = "test_icon",
         color = { 1, 1, 1, 0.2 },
         link = {
             right = 2
@@ -28,7 +28,7 @@ local buttons = {
         size = 80,
         name = "Test Level - 2",
         description = "Test",
-        icon = nil,
+        icon = "test_icon",
         color = { 1, 1, 1, 0.2 },
         link = {
             left = 1,
@@ -43,7 +43,7 @@ local buttons = {
         size = 80,
         name = "Test Level - 3",
         description = "Test",
-        icon = nil,
+        icon = "test_icon",
         color = { 1, 1, 1, 0.2 },
         link = {
             left = 2,
@@ -57,7 +57,7 @@ local buttons = {
         size = 80,
         name = "Test Level - 3.1",
         description = "Test",
-        icon = nil,
+        icon = "test_icon",
         color = { 1, 1, 1, 0.2 },
         link = {
             left = 3
@@ -70,7 +70,7 @@ local buttons = {
         size = 80,
         name = "Test Level - 4",
         description = "Test",
-        icon = nil,
+        icon = "test_icon",
         color = { 1, 1, 1, 0.2 },
         link = {
             left = 2,
@@ -84,7 +84,7 @@ local buttons = {
         size = 80,
         name = "Test Level - 4.1",
         description = "Test",
-        icon = nil,
+        icon = "test_icon",
         color = { 1, 1, 1, 0.2 },
         link = {
             left = 4,
@@ -98,7 +98,7 @@ local buttons = {
         size = 80,
         name = "Test Level - 5",
         description = "Test",
-        icon = nil,
+        icon = "test_icon",
         color = { 1, 1, 1, 0.2 },
         link = {
             bottom = 4.1
@@ -167,12 +167,34 @@ end
 
 function drawButton(button)
     local halfSize = button.size / 2
+    local radius = 4
 
     love.graphics.setColor(table.unpack(button.color))
-    love.graphics.rectangle("fill", button.x - halfSize, button.y - halfSize, button.size, button.size)
-    love.graphics.setColor(1, 1, 1, 0.8)
-    love.graphics.setLineWidth(2)
-    love.graphics.rectangle("line", button.x - halfSize, button.y - halfSize, button.size, button.size)
+    love.graphics.rectangle("fill", button.x - halfSize, button.y - halfSize, button.size, button.size, radius)
+    love.graphics.setColor(1, 1, 1, 1)
+    love.graphics.setLineWidth(4)
+    love.graphics.rectangle("line", button.x - halfSize, button.y - halfSize, button.size, button.size, radius)
+    
+    if button.icon then
+        if not button.iconImage then
+            local iconPath = "src/img/icon/" .. button.icon .. ".png"
+            button.iconImage = love.graphics.newImage(iconPath)
+        end
+        
+        if button.iconImage then
+            local iconSize = button.size
+            local scale = iconSize / math.max(button.iconImage:getWidth(), button.iconImage:getHeight())
+            
+            love.graphics.setColor(1, 1, 1, 1)
+            love.graphics.draw(
+                button.iconImage,
+                button.x, button.y, 0,
+                scale, scale,
+                button.iconImage:getWidth() / 2,
+                button.iconImage:getHeight() / 2
+            )
+        end
+    end
 end
 
 function keypressed(key)
@@ -342,12 +364,13 @@ function drawArrowWithStartDirection(fromButton, toButton, startDirection)
             midY = startY
         end
 
+        local squareSize = 4
+        local halfSquare = squareSize / 2
+
         love.graphics.line(startX, startY, midX, midY)
         love.graphics.line(midX, midY, endX, endY)
         love.graphics.setColor(1, 1, 1, 1)
         love.graphics.rectangle("fill", midX - halfSquare, midY - halfSquare, squareSize, squareSize)
-        local squareSize = 4
-        local halfSquare = squareSize / 2
     else
         love.graphics.line(startX, startY, endX, endY)
     end
