@@ -6,6 +6,22 @@ local displayZoom = 1.0
 local isDragging = false
 local hoveredButton = nil
 local tooltipFont = nil
+local selectedButton = nil
+local overlayAlpha = 0
+local panelY = 0
+local animationTime = 0
+local isPanelVisible = false
+local isAnimationComplete = false
+local isClosing = false
+local closeAnimationTime = 0
+
+local PANEL_BG_COLOR = { 0.1, 0.1, 0.1, 0.95 }
+local PANEL_BORDER_COLOR = { 0.3, 0.3, 0.3, 0.95 }
+local TOOLTIP_BG_COLOR = { 0.1, 0.1, 0.1, 0.95 }
+local TOOLTIP_BORDER_COLOR = { 0.3, 0.3, 0.3, 1 }
+local TOOLTIP_TEXT_COLOR = { 1, 1, 1, 1 }
+local PANEL_TITLE_COLOR = { 0.9, 0.9, 0.9, 1 }
+local PANEL_DESC_COLOR = { 0.8, 0.8, 0.8, 1 }
 
 local buttons = {
     {
@@ -110,6 +126,51 @@ local dragStartX = 0
 local dragStartY = 0
 local dragThreshold = 12
 
+local function easeOutQuad(t)
+    return 1 - (1 - t) * (1 - t)
+end
+
+local ANIMATION_DURATION = 0.3
+local OVERLAY_MAX_ALPHA = 0.4
+local PANEL_TARGET_Y_RATIO = 0.2
+
+local function updatePanelAnimation(dt)
+    if isClosing then
+        closeAnimationTime = closeAnimationTime + dt
+        local closeProgress = math.min(closeAnimationTime / ANIMATION_DURATION, 1)
+
+        if closeProgress < 1 then
+            local easedCloseProgress = easeOutQuad(closeProgress)
+            local screenHeight = love.graphics.getHeight()
+            local startY = screenHeight * PANEL_TARGET_Y_RATIO
+            panelY = startY + (screenHeight - startY) * easedCloseProgress
+            overlayAlpha = OVERLAY_MAX_ALPHA * (1 - easedCloseProgress)
+        else
+            isPanelVisible = false
+            isClosing = false
+            selectedButton = nil
+            isAnimationComplete = false
+            overlayAlpha = 0
+        end
+    else
+        animationTime = animationTime + dt
+        local progress = math.min(animationTime / ANIMATION_DURATION, 1)
+        if progress < 1 then
+            local easedProgress = easeOutQuad(progress)
+            local screenHeight = love.graphics.getHeight()
+            local targetY = screenHeight * PANEL_TARGET_Y_RATIO
+            overlayAlpha = OVERLAY_MAX_ALPHA * easedProgress
+            panelY = screenHeight - (screenHeight - targetY) * easedProgress
+            isAnimationComplete = false
+        else
+            local screenHeight = love.graphics.getHeight()
+            overlayAlpha = OVERLAY_MAX_ALPHA
+            panelY = screenHeight * PANEL_TARGET_Y_RATIO
+            isAnimationComplete = true
+        end
+    end
+end
+
 function load()
     cameraX = 0
     cameraY = 0
@@ -119,10 +180,12 @@ end
 
 function update(dt)
     local diff = zoom - displayZoom
-    if math.abs(diff) < 0.01 then
-        displayZoom = zoom
+    displayZoom = displayZoom + diff / 10
+
+    if isPanelVisible then
+        updatePanelAnimation(dt)
     else
-        displayZoom = displayZoom + diff / 10
+        isAnimationComplete = false
     end
 end
 
@@ -163,6 +226,10 @@ function draw()
         local mouseX, mouseY = love.mouse.getPosition()
         drawTooltip(hoveredButton, mouseX, mouseY)
     end
+
+    if isPanelVisible and selectedButton then
+        drawPanel()
+    end
 end
 
 function drawButton(button)
@@ -174,17 +241,17 @@ function drawButton(button)
     love.graphics.setColor(1, 1, 1, 1)
     love.graphics.setLineWidth(4)
     love.graphics.rectangle("line", button.x - halfSize, button.y - halfSize, button.size, button.size, radius)
-    
+
     if button.icon then
         if not button.iconImage then
             local iconPath = "src/img/icon/" .. button.icon .. ".png"
             button.iconImage = love.graphics.newImage(iconPath)
         end
-        
+
         if button.iconImage then
             local iconSize = button.size
             local scale = iconSize / math.max(button.iconImage:getWidth(), button.iconImage:getHeight())
-            
+
             love.graphics.setColor(1, 1, 1, 1)
             love.graphics.draw(
                 button.iconImage,
@@ -206,6 +273,27 @@ end
 
 function mousepressed(x, y, button)
     if button == 1 then
+        if isPanelVisible and (not isAnimationComplete or isClosing) then
+            return
+        end
+
+        if isPanelVisible and selectedButton and isAnimationComplete then
+            local screenWidth = love.graphics.getWidth()
+            local screenHeight = love.graphics.getHeight()
+            local panelWidth = screenWidth * 0.8
+            local panelHeight = screenHeight * 0.9
+            local panelX = (screenWidth - panelWidth) / 2
+            local isClickOnPanel = x >= panelX and x <= panelX + panelWidth and y >= panelY and y <= panelY + panelHeight
+
+            if isClickOnPanel then
+                return
+            else
+                isClosing = true
+                closeAnimationTime = 0
+                return
+            end
+        end
+
         dragStartX = x
         dragStartY = y
         isDragging = true
@@ -213,6 +301,11 @@ function mousepressed(x, y, button)
 end
 
 function mousemoved(x, y, dx, dy)
+    if isPanelVisible and not isAnimationComplete then
+        hoveredButton = nil
+        return
+    end
+
     if isDragging then
         local worldDx = dx / displayZoom
         cameraX = cameraX - worldDx
@@ -234,6 +327,11 @@ end
 
 function mousereleased(x, y, button)
     if button == 1 then
+        if isPanelVisible and not isAnimationComplete then
+            isDragging = false
+            return
+        end
+
         isDragging = false
 
         local moveX = math.abs(x - dragStartX)
@@ -248,6 +346,10 @@ function mousereleased(x, y, button)
 end
 
 function wheelmoved(x, y)
+    if isPanelVisible and not isAnimationComplete then
+        return
+    end
+
     local zoomStep = 0.4
     local minZoom = 0.2
     local maxZoom = 5.0
@@ -265,7 +367,16 @@ function checkButtonClick(worldX, worldY)
 
         if worldX >= button.x - halfSize and worldX <= button.x + halfSize and
             worldY >= button.y - halfSize and worldY <= button.y + halfSize then
-            print("点击按钮: " .. button.name)
+            -- print("点击按钮: " .. button.name)
+
+            local screenHeight = love.graphics.getHeight()
+
+            selectedButton = button
+            isPanelVisible = true
+            animationTime = 0
+            overlayAlpha = 0
+            panelY = screenHeight
+
             return true
         end
     end
@@ -396,11 +507,29 @@ function drawAllArrows()
     end
 end
 
+function drawPanel()
+    local screenWidth = love.graphics.getWidth()
+    local screenHeight = love.graphics.getHeight()
+    local panelWidth = screenWidth * 0.8
+    local panelHeight = screenHeight * 0.9
+    local panelX = (screenWidth - panelWidth) / 2
+
+    love.graphics.setColor(0, 0, 0, overlayAlpha)
+    love.graphics.rectangle("fill", 0, 0, screenWidth, screenHeight)
+    love.graphics.setColor(table.unpack(PANEL_BG_COLOR))
+    love.graphics.rectangle("fill", panelX, panelY, panelWidth, panelHeight, 12)
+    love.graphics.setColor(table.unpack(PANEL_BORDER_COLOR))
+    love.graphics.setLineWidth(2)
+    love.graphics.rectangle("line", panelX, panelY, panelWidth, panelHeight, 12)
+
+    drawPanelContent(selectedButton, panelX, panelY, panelWidth, panelHeight)
+end
+
 function drawTooltip(button, mouseX, mouseY)
     local padding = 8
-    local backgroundColor = { 0.1, 0.1, 0.1, 0.95 }
-    local textColor = { 1, 1, 1, 1 }
-    local borderColor = { 0.3, 0.3, 0.3, 1 }
+    local backgroundColor = TOOLTIP_BG_COLOR
+    local textColor = TOOLTIP_TEXT_COLOR
+    local borderColor = TOOLTIP_BORDER_COLOR
 
     if not tooltipFont then
         local config = require("src.config")
@@ -434,6 +563,26 @@ function drawTooltip(button, mouseX, mouseY)
     love.graphics.setColor(table.unpack(textColor))
     love.graphics.setFont(tooltipFont)
     love.graphics.print(text, bubbleX + padding, bubbleY + padding)
+end
+
+function drawPanelContent(button, panelX, panelY, panelWidth, panelHeight)
+    local padding = 40
+    local contentX = panelX + padding
+    local contentY = panelY + padding
+    local contentWidth = panelWidth - padding * 2
+    local config = require("src.config")
+    local fontPath = config.fonts.path
+    local titleFont = love.graphics.newFont(fontPath, 36)
+    local descFont = love.graphics.newFont(fontPath, 24)
+    local titleHeight = titleFont:getHeight()
+    local currentY = contentY + titleHeight + 30
+
+    love.graphics.setColor(table.unpack(PANEL_TITLE_COLOR))
+    love.graphics.setFont(titleFont)
+    love.graphics.print(button.name, contentX, contentY)
+    love.graphics.setColor(table.unpack(PANEL_DESC_COLOR))
+    love.graphics.setFont(descFont)
+    love.graphics.printf(button.description, contentX, currentY, contentWidth, "left")
 end
 
 return {
