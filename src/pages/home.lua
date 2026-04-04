@@ -536,8 +536,9 @@ function drawTooltip(button, mouseX, mouseY)
     local borderColor = TOOLTIP_BORDER_COLOR
 
     if not tooltipFont then
+        local locales = require("src.locales")
+        local fontPath = locales.getFontPath()
         local config = require("src.config")
-        local fontPath = config.fonts.path
         local fontSize = config.fonts.sizes.small
         tooltipFont = love.graphics.newFont(fontPath, fontSize)
     end
@@ -574,8 +575,8 @@ function drawPanelContent(button, panelX, panelY, panelWidth, panelHeight)
     local contentX = panelX + padding
     local contentY = panelY + padding
     local contentWidth = panelWidth - padding * 2
-    local config = require("src.config")
-    local fontPath = config.fonts.path
+    local locales = require("src.locales")
+    local fontPath = locales.getFontPath()
     local titleFont = love.graphics.newFont(fontPath, 36)
     local descFont = love.graphics.newFont(fontPath, 24)
     local titleHeight = titleFont:getHeight()

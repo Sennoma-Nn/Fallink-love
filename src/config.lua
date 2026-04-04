@@ -9,7 +9,7 @@ Config.colors = {
 }
 
 Config.fonts = {
-    path = "src/font/Huiwen-HKHei.ttf",
+    path = "src/font/SarasaGothicSC-Regular.ttf",
     sizes = {
         large = 36,
         medium = 32,

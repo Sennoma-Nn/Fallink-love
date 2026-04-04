@@ -5,7 +5,7 @@ local locales = require("src.locales")
 
 function load()
     titleImage = love.graphics.newImage("src/img/title/title.png")
-    promptFont = love.graphics.newFont(config.fonts.path, config.fonts.sizes.medium)
+    promptFont = love.graphics.newFont(locales.getFontPath(), config.fonts.sizes.small)
 end
 
 function update(dt)

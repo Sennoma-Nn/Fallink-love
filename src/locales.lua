@@ -2,26 +2,45 @@ local Locales = {}
 
 Locales.languages = {
     en = "English",
-    zh = "中文"
+    zh_cn = "简体中文",
+    zh_tw = "繁體中文",
+    jp = "日本語",
 }
 
-Locales.current = "en"
+Locales.current = "jp"
 
 Locales.texts = {
     title = {
         en = {
-            prompt = "Press SPACE to continue",
+            prompt = "Press [SPACE] to continue",
         },
-        zh = {
-            prompt = "按下空格继续",
+        zh_cn = {
+            prompt = "按下「空格」继续",
+        },
+        zh_tw = {
+            prompt = "按下「空白」繼續",
+        },
+        jp = {
+            prompt = "「スペース」キーを押して続行",
         }
     },
     common = {
         en = {
         },
-        zh = {
+        zh_cn = {
+        },
+        zh_tw = {
+        },
+        jp = {
         }
     }
+}
+
+Locales.fonts = {
+    en = "src/font/SarasaGothicSC-Regular.ttf",
+    zh_cn = "src/font/SarasaGothicSC-Regular.ttf",
+    zh_tw = "src/font/SarasaGothicTC-Regular.ttf",
+    jp = "src/font/SarasaGothicJ-Regular.ttf"
 }
 
 function Locales.get(category, key)
@@ -30,6 +49,10 @@ function Locales.get(category, key)
         return Locales.texts[category][lang][key] or key
     end
     return key
+end
+
+function Locales.getFontPath()
+    return Locales.fonts[Locales.current]
 end
 
 function Locales.getCurrentLanguage()
