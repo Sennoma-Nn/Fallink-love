@@ -301,7 +301,7 @@ function mousepressed(x, y, button)
 end
 
 function mousemoved(x, y, dx, dy)
-    if isPanelVisible and not isAnimationComplete then
+    if isPanelVisible then
         hoveredButton = nil
         return
     end
@@ -362,6 +362,10 @@ function wheelmoved(x, y)
 end
 
 function checkButtonClick(worldX, worldY)
+    if isPanelVisible or isClosing then
+        return false
+    end
+    
     for _, button in ipairs(buttons) do
         local halfSize = button.size / 2
 
