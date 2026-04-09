@@ -1,4 +1,5 @@
 local config = require("src.config")
+local locales = require("src.locales")
 local cameraX = 0
 local cameraY = 0
 local zoom = 1.0
@@ -15,6 +16,8 @@ local isAnimationComplete = false
 local isClosing = false
 local closeAnimationTime = 0
 
+local TOP_BAR_HEIGHT = 92
+local TOP_BAR_COLOR = { 39 / 255, 39 / 255, 39 / 255, 1 }
 local PANEL_BG_COLOR = { 0.1, 0.1, 0.1, 0.95 }
 local PANEL_BORDER_COLOR = { 0.3, 0.3, 0.3, 0.95 }
 local TOOLTIP_BG_COLOR = { 0.1, 0.1, 0.1, 0.95 }
@@ -22,6 +25,7 @@ local TOOLTIP_BORDER_COLOR = { 0.3, 0.3, 0.3, 1 }
 local TOOLTIP_TEXT_COLOR = { 1, 1, 1, 1 }
 local PANEL_TITLE_COLOR = { 0.9, 0.9, 0.9, 1 }
 local PANEL_DESC_COLOR = { 0.8, 0.8, 0.8, 1 }
+local BUTTON_COLOR = { 1, 1, 1, 0.2 }
 
 local buttons = {
     {
@@ -32,7 +36,7 @@ local buttons = {
         name = "Test Level - 1",
         description = "Test",
         icon = "test_icon",
-        color = { 1, 1, 1, 0.2 },
+        color = BUTTON_COLOR,
         link = {
             right = 2
         }
@@ -45,7 +49,7 @@ local buttons = {
         name = "Test Level - 2",
         description = "Test",
         icon = "test_icon",
-        color = { 1, 1, 1, 0.2 },
+        color = BUTTON_COLOR,
         link = {
             left = 1,
             top = 3,
@@ -60,7 +64,7 @@ local buttons = {
         name = "Test Level - 3",
         description = "Test",
         icon = "test_icon",
-        color = { 1, 1, 1, 0.2 },
+        color = BUTTON_COLOR,
         link = {
             left = 2,
             right = 3.1
@@ -74,7 +78,7 @@ local buttons = {
         name = "Test Level - 3.1",
         description = "Test",
         icon = "test_icon",
-        color = { 1, 1, 1, 0.2 },
+        color = BUTTON_COLOR,
         link = {
             left = 3
         }
@@ -87,7 +91,7 @@ local buttons = {
         name = "Test Level - 4",
         description = "Test",
         icon = "test_icon",
-        color = { 1, 1, 1, 0.2 },
+        color = BUTTON_COLOR,
         link = {
             left = 2,
             right = 4.1
@@ -101,7 +105,7 @@ local buttons = {
         name = "Test Level - 4.1",
         description = "Test",
         icon = "test_icon",
-        color = { 1, 1, 1, 0.2 },
+        color = BUTTON_COLOR,
         link = {
             left = 4,
             right = 5
@@ -115,11 +119,20 @@ local buttons = {
         name = "Test Level - 5",
         description = "Test",
         icon = "test_icon",
-        color = { 1, 1, 1, 0.2 },
+        color = BUTTON_COLOR,
         link = {
             bottom = 4.1
         }
     }
+}
+
+local settingsButton = {
+    id = "settings",
+    size = 60,
+    icon = "settings",
+    color = BUTTON_COLOR,
+    name = locales.get("settings", "title"),
+    description = locales.get("settings", "description"),
 }
 
 local dragStartX = 0
@@ -132,7 +145,6 @@ end
 
 local ANIMATION_DURATION = 0.3
 local OVERLAY_MAX_ALPHA = 0.4
-local PANEL_TARGET_Y_RATIO = 0.2
 
 local function updatePanelAnimation(dt)
     if isClosing then
@@ -142,7 +154,7 @@ local function updatePanelAnimation(dt)
         if closeProgress < 1 then
             local easedCloseProgress = easeOutQuad(closeProgress)
             local screenHeight = love.graphics.getHeight()
-            local startY = screenHeight * PANEL_TARGET_Y_RATIO
+            local startY = TOP_BAR_HEIGHT + 16
             panelY = startY + (screenHeight - startY) * easedCloseProgress
             overlayAlpha = OVERLAY_MAX_ALPHA * (1 - easedCloseProgress)
         else
@@ -158,14 +170,14 @@ local function updatePanelAnimation(dt)
         if progress < 1 then
             local easedProgress = easeOutQuad(progress)
             local screenHeight = love.graphics.getHeight()
-            local targetY = screenHeight * PANEL_TARGET_Y_RATIO
+            local targetY = TOP_BAR_HEIGHT + 16
             overlayAlpha = OVERLAY_MAX_ALPHA * easedProgress
             panelY = screenHeight - (screenHeight - targetY) * easedProgress
             isAnimationComplete = false
         else
             local screenHeight = love.graphics.getHeight()
             overlayAlpha = OVERLAY_MAX_ALPHA
-            panelY = screenHeight * PANEL_TARGET_Y_RATIO
+            panelY = TOP_BAR_HEIGHT + 16
             isAnimationComplete = true
         end
     end
@@ -193,7 +205,7 @@ function worldToScreen(worldX, worldY)
     local screenWidth = love.graphics.getWidth()
     local screenHeight = love.graphics.getHeight()
     local screenX = (worldX - cameraX) * zoom + screenWidth / 2
-    local screenY = (worldY - cameraY) * zoom + screenHeight / 2
+    local screenY = (worldY - cameraY) * zoom + screenHeight / 2 + TOP_BAR_HEIGHT / 2
     return screenX, screenY
 end
 
@@ -201,7 +213,7 @@ function screenToWorld(screenX, screenY)
     local screenWidth = love.graphics.getWidth()
     local screenHeight = love.graphics.getHeight()
     local worldX = (screenX - screenWidth / 2) / zoom + cameraX
-    local worldY = (screenY - screenHeight / 2) / zoom + cameraY
+    local worldY = (screenY - screenHeight / 2 - TOP_BAR_HEIGHT / 2) / zoom + cameraY
     return worldX, worldY
 end
 
@@ -210,8 +222,9 @@ function draw()
     local screenHeight = love.graphics.getHeight()
 
     love.graphics.clear(table.unpack(config.colors.background))
+
     love.graphics.push()
-    love.graphics.translate(screenWidth / 2, screenHeight / 2)
+    love.graphics.translate(screenWidth / 2, screenHeight / 2 + TOP_BAR_HEIGHT / 2)
     love.graphics.scale(displayZoom, displayZoom)
     love.graphics.translate(-cameraX, -cameraY)
 
@@ -222,13 +235,16 @@ function draw()
 
     love.graphics.pop()
 
-    if hoveredButton then
-        local mouseX, mouseY = love.mouse.getPosition()
-        drawTooltip(hoveredButton, mouseX, mouseY)
-    end
+    drawTopBar(screenWidth, screenHeight)
+    drawSettingsButton(screenWidth, screenHeight)
 
     if isPanelVisible and selectedButton then
         drawPanel()
+    end
+
+    if hoveredButton then
+        local mouseX, mouseY = love.mouse.getPosition()
+        drawTooltip(hoveredButton, mouseX, mouseY)
     end
 end
 
@@ -280,9 +296,20 @@ function mousepressed(x, y, button)
         if isPanelVisible and selectedButton and isAnimationComplete then
             local screenWidth = love.graphics.getWidth()
             local screenHeight = love.graphics.getHeight()
-            local panelWidth = screenWidth * 0.8
-            local panelHeight = screenHeight * 0.9
+            local panelWidth = screenWidth - 32
+            local panelHeight = screenHeight
             local panelX = (screenWidth - panelWidth) / 2
+            local buttonSize = 32
+            local closeButtonX = panelX + panelWidth - 16 - buttonSize
+            local closeButtonY = panelY + 16
+            
+            if x >= closeButtonX and x <= closeButtonX + buttonSize and
+                y >= closeButtonY and y <= closeButtonY + buttonSize then
+                isClosing = true
+                closeAnimationTime = 0
+                return
+            end
+            
             local isClickOnPanel = x >= panelX and x <= panelX + panelWidth and y >= panelY and y <= panelY + panelHeight
 
             if isClickOnPanel then
@@ -294,14 +321,38 @@ function mousepressed(x, y, button)
             end
         end
 
+        if y < TOP_BAR_HEIGHT then
+            return
+        end
+
         dragStartX = x
         dragStartY = y
         isDragging = true
+        hoveredButton = nil
     end
 end
 
 function mousemoved(x, y, dx, dy)
     if isPanelVisible then
+        if selectedButton and isAnimationComplete then
+            local screenWidth = love.graphics.getWidth()
+            local screenHeight = love.graphics.getHeight()
+            local panelWidth = screenWidth - 32
+            local panelHeight = screenHeight
+            local panelX = (screenWidth - panelWidth) / 2
+            local buttonSize = 32
+            local closeButtonX = panelX + panelWidth - 16 - buttonSize
+            local closeButtonY = panelY + 16
+            
+            if x >= closeButtonX and x <= closeButtonX + buttonSize and
+                y >= closeButtonY and y <= closeButtonY + buttonSize then
+                love.mouse.setCursor(love.mouse.getSystemCursor("hand"))
+            else
+                love.mouse.setCursor()
+            end
+        else
+            love.mouse.setCursor()
+        end
         hoveredButton = nil
         return
     end
@@ -309,18 +360,38 @@ function mousemoved(x, y, dx, dy)
     if isDragging then
         local worldDx = dx / displayZoom
         cameraX = cameraX - worldDx
+        love.mouse.setCursor()
     else
-        local worldX, worldY = screenToWorld(x, y)
-        hoveredButton = nil
+        local button = settingsButton
+        local halfSize = button.size / 2
+        local buttonX = love.graphics.getWidth() - halfSize - 16
+        local buttonY = TOP_BAR_HEIGHT / 2
 
-        for _, button in ipairs(buttons) do
-            local halfSize = button.size / 2
+        if x >= buttonX - halfSize and x <= buttonX + halfSize and
+            y >= buttonY - halfSize and y <= buttonY + halfSize then
+            hoveredButton = button
+            love.mouse.setCursor(love.mouse.getSystemCursor("hand"))
+        elseif y >= TOP_BAR_HEIGHT then
+            local worldX, worldY = screenToWorld(x, y)
+            hoveredButton = nil
 
-            if worldX >= button.x - halfSize and worldX <= button.x + halfSize and
-                worldY >= button.y - halfSize and worldY <= button.y + halfSize then
-                hoveredButton = button
-                break
+            for _, button in ipairs(buttons) do
+                local halfSize = button.size / 2
+
+                if worldX >= button.x - halfSize and worldX <= button.x + halfSize and
+                    worldY >= button.y - halfSize and worldY <= button.y + halfSize then
+                    hoveredButton = button
+                    love.mouse.setCursor(love.mouse.getSystemCursor("hand"))
+                    break
+                end
             end
+            
+            if not hoveredButton then
+                love.mouse.setCursor()
+            end
+        else
+            hoveredButton = nil
+            love.mouse.setCursor()
         end
     end
 end
@@ -514,8 +585,8 @@ end
 function drawPanel()
     local screenWidth = love.graphics.getWidth()
     local screenHeight = love.graphics.getHeight()
-    local panelWidth = screenWidth * 0.8
-    local panelHeight = screenHeight * 0.9
+    local panelWidth = screenWidth - 32
+    local panelHeight = screenHeight
     local panelX = (screenWidth - panelWidth) / 2
 
     love.graphics.setColor(0, 0, 0, overlayAlpha)
@@ -527,6 +598,7 @@ function drawPanel()
     love.graphics.rectangle("line", panelX, panelY, panelWidth, panelHeight, 12)
 
     drawPanelContent(selectedButton, panelX, panelY, panelWidth, panelHeight)
+    drawCloseButton(panelX, panelY, panelWidth)
 end
 
 function drawTooltip(button, mouseX, mouseY)
@@ -536,7 +608,6 @@ function drawTooltip(button, mouseX, mouseY)
     local borderColor = TOOLTIP_BORDER_COLOR
 
     if not tooltipFont then
-        local locales = require("src.locales")
         local fontPath = locales.getFontPath()
         local config = require("src.config")
         local fontSize = config.fonts.sizes.small
@@ -575,7 +646,6 @@ function drawPanelContent(button, panelX, panelY, panelWidth, panelHeight)
     local contentX = panelX + padding
     local contentY = panelY + padding
     local contentWidth = panelWidth - padding * 2
-    local locales = require("src.locales")
     local fontPath = locales.getFontPath()
     local titleFont = love.graphics.newFont(fontPath, 36)
     local descFont = love.graphics.newFont(fontPath, 24)
@@ -588,6 +658,66 @@ function drawPanelContent(button, panelX, panelY, panelWidth, panelHeight)
     love.graphics.setColor(table.unpack(PANEL_DESC_COLOR))
     love.graphics.setFont(descFont)
     love.graphics.printf(button.description, contentX, currentY, contentWidth, "left")
+end
+
+function drawTopBar(screenWidth, screenHeight)
+    love.graphics.setColor(table.unpack(TOP_BAR_COLOR))
+    love.graphics.rectangle("fill", 0, 0, screenWidth, TOP_BAR_HEIGHT)
+end
+
+function drawSettingsButton(screenWidth, screenHeight)
+    local button = settingsButton
+    local halfSize = button.size / 2
+    local radius = 4
+    local buttonX = screenWidth - halfSize - 16
+    local buttonY = TOP_BAR_HEIGHT / 2
+    
+    love.graphics.setColor(table.unpack(button.color))
+    love.graphics.rectangle("fill", buttonX - halfSize, buttonY - halfSize, button.size, button.size, radius)
+    love.graphics.setColor(1, 1, 1, 1)
+    love.graphics.setLineWidth(4)
+    love.graphics.rectangle("line", buttonX - halfSize, buttonY - halfSize, button.size, button.size, radius)
+    
+    if button.icon then
+        if not button.iconImage then
+            local iconPath = "src/img/icon/" .. button.icon .. ".png"
+            button.iconImage = love.graphics.newImage(iconPath)
+        end
+
+        if button.iconImage then
+            local iconSize = button.size
+            local scale = iconSize / math.max(button.iconImage:getWidth(), button.iconImage:getHeight())
+
+            love.graphics.setColor(1, 1, 1, 1)
+            love.graphics.draw(
+                button.iconImage,
+                buttonX, buttonY, 0,
+                scale, scale,
+                button.iconImage:getWidth() / 2,
+                button.iconImage:getHeight() / 2
+            )
+        end
+    end
+end
+
+function drawCloseButton(panelX, panelY, panelWidth)
+    local buttonSize = 32
+    local buttonX = panelX + panelWidth - 16 - buttonSize
+    local buttonY = panelY + 16
+    local iconPath = "src/img/icon/X.png"
+    local file = love.filesystem.getInfo(iconPath)
+    if file then
+        local closeIcon = love.graphics.newImage(iconPath)
+        local scale = buttonSize / math.max(closeIcon:getWidth(), closeIcon:getHeight())
+        love.graphics.setColor(1, 1, 1, 1)
+        love.graphics.draw(
+            closeIcon,
+            buttonX + buttonSize / 2, buttonY + buttonSize / 2, 0,
+            scale, scale,
+            closeIcon:getWidth() / 2,
+            closeIcon:getHeight() / 2
+        )
+    end
 end
 
 return {

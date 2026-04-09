@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="16"
+   height="16"
+   viewBox="0 0 16 16"
+   version="1.1"
+   id="svg1"
+   inkscape:version="1.4.3 (0d15f75042, 2025-12-25)"
+   sodipodi:docname="settings.svg"
+   inkscape:export-filename="settings.png"
+   inkscape:export-xdpi="1536"
+   inkscape:export-ydpi="1536"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#000000"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="px"
+     inkscape:zoom="18.627844"
+     inkscape:cx="9.2871725"
+     inkscape:cy="3.4088754"
+     inkscape:window-width="1880"
+     inkscape:window-height="1048"
+     inkscape:window-x="40"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs1" />
+  <g
+     inkscape:label="图层 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <rect
+       style="fill:#ffffff;fill-opacity:1;stroke-width:0.5;stroke-linecap:square;stroke-linejoin:round"
+       id="rect1"
+       width="16"
+       height="16"
+       x="-16"
+       y="0"
+       transform="rotate(-90)" />
+    <path
+       d="m 5.4974425,2.879 q 0.4746292,0 0.8262064,0.3164005 0.3515772,0.3164005 0.3925945,0.7910012 v 1.160135 Q 6.6752261,5.6211374 6.3236489,5.937538 5.9720717,6.2539384 5.4974425,6.2539384 5.0169536,6.2539384 4.6653764,5.937538 4.3137992,5.6211374 4.2727819,5.1465367 V 3.9864017 Q 4.3137992,3.511801 4.6653764,3.1954005 5.0169536,2.879 5.4974425,2.879 Z M 2.761,4.3906912 q 0,-0.1757781 0.1171924,-0.2929634 0.1171924,-0.1171854 0.2929809,-0.1113261 h 0.755891 v 1.160135 H 3.1711733 Q 2.9953848,5.152396 2.8781924,5.0352106 2.761,4.9180253 2.761,4.7422473 Z M 12.827827,3.9864017 q 0.175788,-0.00586 0.292981,0.1113261 Q 13.238,4.2149131 13.238,4.3906912 v 0.3515561 q 0,0.175778 -0.117192,0.2929633 -0.117193,0.1171854 -0.292981,0.1113261 H 7.1264168 v -1.160135 z m -2.32627,2.3261294 q 0.48049,0 0.832066,0.3164004 0.351578,0.3164006 0.392595,0.7910015 v 1.160135 q -0.04101,0.474601 -0.392595,0.791001 -0.351576,0.3164 -0.832066,0.3164 -0.474628,0 -0.826206,-0.3164 Q 9.323774,9.054669 9.282757,8.580068 V 7.419933 Q 9.323777,6.9453321 9.675351,6.6289315 10.026929,6.3125311 10.501557,6.3125311 Z M 2.761,7.824222 Q 2.761,7.648444 2.8781924,7.531259 2.9953848,7.414074 3.1711733,7.419933 H 8.872584 V 8.580068 H 3.1711733 Q 2.9953848,8.585927 2.8781924,8.468742 2.761,8.351556 2.761,8.175778 Z M 12.827827,7.419933 q 0.175788,-0.0059 0.292981,0.111326 Q 13.238,7.648444 13.238,7.824222 v 0.351556 q 0,0.175778 -0.117192,0.292964 -0.117193,0.117185 -0.292981,0.111326 H 12.071936 V 7.419933 Z M 7.419398,9.746062 q 0.474629,0 0.826206,0.3164 0.351577,0.316401 0.392595,0.791001 v 1.160135 Q 8.597179,12.4882 8.245604,12.8046 7.894027,13.121 7.419398,13.121 6.9389089,13.121 6.5873317,12.8046 6.2357545,12.4882 6.1947372,12.013598 v -1.160135 q 0.041017,-0.4746 0.3925945,-0.791001 0.3515772,-0.3164 0.8320663,-0.3164 z m 5.408429,1.107401 q 0.175788,-0.0059 0.292981,0.111326 0.117192,0.117186 0.117192,0.292964 v 0.351556 q 0,0.175778 -0.117192,0.292963 -0.117193,0.117186 -0.292981,0.111326 H 8.989776 V 10.853463 Z M 2.761,11.257753 q 0,-0.175778 0.1171924,-0.292964 0.1171924,-0.117184 0.2929809,-0.111326 H 5.84316 v 1.160135 H 3.1711733 Q 2.9953848,12.019458 2.8781924,11.902272 2.761,11.785087 2.761,11.609309 Z"
+       id="text1"
+       style="font-weight:bold;font-size:12px;font-family:'CaskaydiaCove Nerd Font';-inkscape-font-specification:'CaskaydiaCove Nerd Font Bold';fill:#000000;fill-opacity:1;stroke-width:0.5;stroke-linecap:square;stroke-linejoin:round"
+       aria-label="" />
+  </g>
+</svg>

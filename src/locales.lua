@@ -24,16 +24,24 @@ Locales.texts = {
             prompt = "「スペース」キーを押して続行",
         }
     },
-    common = {
+    settings = {
         en = {
+            title = "Settings",
+            description = "Game settings"
         },
         zh_cn = {
+            title = "设置",
+            description = "游戏设置"
         },
         zh_tw = {
+            title = "設定",
+            description = "遊戲設定"
         },
         jp = {
+            title = "設定",
+            description = "ゲーム設定"
         }
-    }
+    },
 }
 
 Locales.fonts = {
