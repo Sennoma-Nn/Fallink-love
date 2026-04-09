@@ -7,7 +7,7 @@ Locales.languages = {
     jp = "日本語",
 }
 
-Locales.current = "jp"
+Locales.current = "en"
 
 Locales.texts = {
     title = {

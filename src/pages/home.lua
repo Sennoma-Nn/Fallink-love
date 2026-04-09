@@ -1,5 +1,6 @@
 local config = require("src.config")
 local locales = require("src.locales")
+local uiButton = require("src.ui.button")
 local cameraX = 0
 local cameraY = 0
 local zoom = 1.0
@@ -7,6 +8,9 @@ local displayZoom = 1.0
 local isDragging = false
 local hoveredButton = nil
 local tooltipFont = nil
+local panelTitleFont = nil
+local panelDescFont = nil
+local closeIcon = nil
 local selectedButton = nil
 local overlayAlpha = 0
 local panelY = 0
@@ -188,6 +192,30 @@ function load()
     cameraY = 0
     zoom = 1.0
     isDragging = false
+
+    uiButton.preloadIcon(settingsButton)
+
+    for _, button in ipairs(buttons) do
+        if button.icon and not button.iconImage then
+            local iconPath = "src/img/icon/" .. button.icon .. ".png"
+            button.iconImage = love.graphics.newImage(iconPath)
+        end
+    end
+    
+    local fontPath = locales.getFontPath()
+    local config = require("src.config")
+    
+    local tooltipFontSize = config.fonts.sizes.small
+    tooltipFont = love.graphics.newFont(fontPath, tooltipFontSize)
+    
+    panelTitleFont = love.graphics.newFont(fontPath, 36)
+    panelDescFont = love.graphics.newFont(fontPath, 24)
+    
+    local closeIconPath = "src/img/icon/X.png"
+    local file = love.filesystem.getInfo(closeIconPath)
+    if file then
+        closeIcon = love.graphics.newImage(closeIconPath)
+    end
 end
 
 function update(dt)
@@ -249,35 +277,7 @@ function draw()
 end
 
 function drawButton(button)
-    local halfSize = button.size / 2
-    local radius = 4
-
-    love.graphics.setColor(table.unpack(button.color))
-    love.graphics.rectangle("fill", button.x - halfSize, button.y - halfSize, button.size, button.size, radius)
-    love.graphics.setColor(1, 1, 1, 1)
-    love.graphics.setLineWidth(4)
-    love.graphics.rectangle("line", button.x - halfSize, button.y - halfSize, button.size, button.size, radius)
-
-    if button.icon then
-        if not button.iconImage then
-            local iconPath = "src/img/icon/" .. button.icon .. ".png"
-            button.iconImage = love.graphics.newImage(iconPath)
-        end
-
-        if button.iconImage then
-            local iconSize = button.size
-            local scale = iconSize / math.max(button.iconImage:getWidth(), button.iconImage:getHeight())
-
-            love.graphics.setColor(1, 1, 1, 1)
-            love.graphics.draw(
-                button.iconImage,
-                button.x, button.y, 0,
-                scale, scale,
-                button.iconImage:getWidth() / 2,
-                button.iconImage:getHeight() / 2
-            )
-        end
-    end
+    uiButton.draw(button, button.x, button.y)
 end
 
 function keypressed(key)
@@ -319,6 +319,17 @@ function mousepressed(x, y, button)
                 closeAnimationTime = 0
                 return
             end
+        end
+
+        local button = settingsButton
+        local buttonX, buttonY = uiButton.calcRightPosition(button, love.graphics.getWidth(), TOP_BAR_HEIGHT)
+
+        if uiButton.isClicked(button, x, y, buttonX, buttonY) then
+            dragStartX = x
+            dragStartY = y
+            isDragging = false
+            hoveredButton = nil
+            return
         end
 
         if y < TOP_BAR_HEIGHT then
@@ -363,12 +374,9 @@ function mousemoved(x, y, dx, dy)
         love.mouse.setCursor()
     else
         local button = settingsButton
-        local halfSize = button.size / 2
-        local buttonX = love.graphics.getWidth() - halfSize - 16
-        local buttonY = TOP_BAR_HEIGHT / 2
+        local buttonX, buttonY = uiButton.calcRightPosition(button, love.graphics.getWidth(), TOP_BAR_HEIGHT)
 
-        if x >= buttonX - halfSize and x <= buttonX + halfSize and
-            y >= buttonY - halfSize and y <= buttonY + halfSize then
+        if uiButton.isHovered(button, x, y, buttonX, buttonY) then
             hoveredButton = button
             love.mouse.setCursor(love.mouse.getSystemCursor("hand"))
         elseif y >= TOP_BAR_HEIGHT then
@@ -410,6 +418,15 @@ function mousereleased(x, y, button)
         local totalMove = math.sqrt(moveX * moveX + moveY * moveY)
 
         if totalMove < dragThreshold then
+            local button = settingsButton
+            local buttonX, buttonY = uiButton.calcRightPosition(button, love.graphics.getWidth(), TOP_BAR_HEIGHT)
+
+            if uiButton.isClicked(button, x, y, buttonX, buttonY) then
+                local main = require("main")
+                main.switchState("settings")
+                return
+            end
+
             local worldX, worldY = screenToWorld(x, y)
             checkButtonClick(worldX, worldY)
         end
@@ -607,13 +624,6 @@ function drawTooltip(button, mouseX, mouseY)
     local textColor = TOOLTIP_TEXT_COLOR
     local borderColor = TOOLTIP_BORDER_COLOR
 
-    if not tooltipFont then
-        local fontPath = locales.getFontPath()
-        local config = require("src.config")
-        local fontSize = config.fonts.sizes.small
-        tooltipFont = love.graphics.newFont(fontPath, fontSize)
-    end
-
     local text = button.name
     local textWidth = tooltipFont:getWidth(text)
     local textHeight = tooltipFont:getHeight()
@@ -646,17 +656,14 @@ function drawPanelContent(button, panelX, panelY, panelWidth, panelHeight)
     local contentX = panelX + padding
     local contentY = panelY + padding
     local contentWidth = panelWidth - padding * 2
-    local fontPath = locales.getFontPath()
-    local titleFont = love.graphics.newFont(fontPath, 36)
-    local descFont = love.graphics.newFont(fontPath, 24)
-    local titleHeight = titleFont:getHeight()
+    local titleHeight = panelTitleFont:getHeight()
     local currentY = contentY + titleHeight + 30
 
     love.graphics.setColor(table.unpack(PANEL_TITLE_COLOR))
-    love.graphics.setFont(titleFont)
+    love.graphics.setFont(panelTitleFont)
     love.graphics.print(button.name, contentX, contentY)
     love.graphics.setColor(table.unpack(PANEL_DESC_COLOR))
-    love.graphics.setFont(descFont)
+    love.graphics.setFont(panelDescFont)
     love.graphics.printf(button.description, contentX, currentY, contentWidth, "left")
 end
 
@@ -666,48 +673,15 @@ function drawTopBar(screenWidth, screenHeight)
 end
 
 function drawSettingsButton(screenWidth, screenHeight)
-    local button = settingsButton
-    local halfSize = button.size / 2
-    local radius = 4
-    local buttonX = screenWidth - halfSize - 16
-    local buttonY = TOP_BAR_HEIGHT / 2
-    
-    love.graphics.setColor(table.unpack(button.color))
-    love.graphics.rectangle("fill", buttonX - halfSize, buttonY - halfSize, button.size, button.size, radius)
-    love.graphics.setColor(1, 1, 1, 1)
-    love.graphics.setLineWidth(4)
-    love.graphics.rectangle("line", buttonX - halfSize, buttonY - halfSize, button.size, button.size, radius)
-    
-    if button.icon then
-        if not button.iconImage then
-            local iconPath = "src/img/icon/" .. button.icon .. ".png"
-            button.iconImage = love.graphics.newImage(iconPath)
-        end
-
-        if button.iconImage then
-            local iconSize = button.size
-            local scale = iconSize / math.max(button.iconImage:getWidth(), button.iconImage:getHeight())
-
-            love.graphics.setColor(1, 1, 1, 1)
-            love.graphics.draw(
-                button.iconImage,
-                buttonX, buttonY, 0,
-                scale, scale,
-                button.iconImage:getWidth() / 2,
-                button.iconImage:getHeight() / 2
-            )
-        end
-    end
+    uiButton.drawSettingsButton(settingsButton, screenWidth, screenHeight, TOP_BAR_HEIGHT)
 end
 
 function drawCloseButton(panelX, panelY, panelWidth)
     local buttonSize = 32
     local buttonX = panelX + panelWidth - 16 - buttonSize
     local buttonY = panelY + 16
-    local iconPath = "src/img/icon/X.png"
-    local file = love.filesystem.getInfo(iconPath)
-    if file then
-        local closeIcon = love.graphics.newImage(iconPath)
+    
+    if closeIcon then
         local scale = buttonSize / math.max(closeIcon:getWidth(), closeIcon:getHeight())
         love.graphics.setColor(1, 1, 1, 1)
         love.graphics.draw(

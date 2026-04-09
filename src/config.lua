@@ -1,7 +1,7 @@
 local Config = {}
 
 Config.colors = {
-    background = {0.071, 0.071, 0.071, 1}, -- #121212
+    background = {0.071, 0.071, 0.071, 1},
     text = {0.9, 0.9, 0.9, 1},
     prompt = {0.8, 0.8, 0.8, 1},
     title = {1, 1, 1, 1},
