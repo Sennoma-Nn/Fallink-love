@@ -1,6 +1,11 @@
 local button = {}
 
 local BUTTON_COLOR = { 1, 1, 1, 0.2 }
+local TOOLTIP_BG_COLOR = { 0.1, 0.1, 0.1, 0.95 }
+local TOOLTIP_BORDER_COLOR = { 0.3, 0.3, 0.3, 1 }
+local TOOLTIP_TEXT_COLOR = { 1, 1, 1, 1 }
+
+local tooltipFont = nil
 
 function button.preloadIcon(btn)
     if btn.icon and not btn.iconImage then
@@ -62,6 +67,49 @@ end
 function button.drawMapButton(btn, screenWidth, screenHeight, topBarHeight)
     local buttonX, buttonY = button.calcRightPosition(btn, screenWidth, topBarHeight)
     return button.draw(btn, buttonX, buttonY)
+end
+
+function button.initTooltipFont(fontPath, fontSize)
+    if not tooltipFont then
+        tooltipFont = love.graphics.newFont(fontPath, fontSize)
+    end
+end
+
+function button.drawTooltip(btn, mouseX, mouseY)
+    if not tooltipFont then
+        return
+    end
+    
+    local padding = 8
+    local backgroundColor = TOOLTIP_BG_COLOR
+    local textColor = TOOLTIP_TEXT_COLOR
+    local borderColor = TOOLTIP_BORDER_COLOR
+
+    local text = btn.tip or btn.name or ""
+    local textWidth = tooltipFont:getWidth(text)
+    local textHeight = tooltipFont:getHeight()
+    local bubbleWidth = textWidth + padding * 2
+    local bubbleHeight = textHeight + padding * 2
+    local bubbleX = mouseX + 20
+    local bubbleY = mouseY + 20
+    local screenWidth = love.graphics.getWidth()
+    local screenHeight = love.graphics.getHeight()
+
+    if bubbleX + bubbleWidth > screenWidth then
+        bubbleX = mouseX - bubbleWidth - 20
+    end
+    if bubbleY + bubbleHeight > screenHeight then
+        bubbleY = mouseY - bubbleHeight - 20
+    end
+
+    love.graphics.setColor(table.unpack(backgroundColor))
+    love.graphics.rectangle("fill", bubbleX, bubbleY, bubbleWidth, bubbleHeight, 4)
+    love.graphics.setColor(table.unpack(borderColor))
+    love.graphics.setLineWidth(1)
+    love.graphics.rectangle("line", bubbleX, bubbleY, bubbleWidth, bubbleHeight, 4)
+    love.graphics.setColor(table.unpack(textColor))
+    love.graphics.setFont(tooltipFont)
+    love.graphics.print(text, bubbleX + padding, bubbleY + padding)
 end
 
 return button

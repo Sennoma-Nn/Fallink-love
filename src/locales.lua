@@ -24,23 +24,23 @@ Locales.texts = {
             prompt = "「スペース」キーを押して続行",
         }
     },
-    settings = {
+    tips = {
         en = {
-            title = "Settings",
-            description = "Game settings"
+            settings = "Game settings",
+            map = "Return to game levels"
         },
         zh_cn = {
-            title = "设置",
-            description = "游戏设置"
+            settings = "游戏设置",
+            map = "返回游戏关卡"
         },
         zh_tw = {
-            title = "設定",
-            description = "遊戲設定"
+            settings = "遊戲設定",
+            map = "返回遊戲關卡"
         },
         jp = {
-            title = "設定",
-            description = "ゲーム設定"
-        }
+            settings = "ゲーム設定",
+            map = "ゲームレベルに戻る"
+        },
     },
 }
 

@@ -12,11 +12,18 @@ local mapButton = {
     size = 60,
     icon = "map",
     color = BUTTON_COLOR,
-    name = "地图",
-    description = "游戏关卡",
+    tip = locales.get("tips", "map"),
 }
 
+local hoveredButton = nil
+
 function load()
+    uiButton.preloadIcon(mapButton)
+    
+    local fontPath = locales.getFontPath()
+    local config = require("src.config")
+    local tooltipFontSize = config.fonts.sizes.small
+    uiButton.initTooltipFont(fontPath, tooltipFontSize)
 end
 
 function update(dt)
@@ -31,6 +38,11 @@ function draw()
     love.graphics.rectangle("fill", 0, 0, screenWidth, TOP_BAR_HEIGHT)
     
     drawMapButton(screenWidth, screenHeight)
+    
+    if hoveredButton then
+        local mouseX, mouseY = love.mouse.getPosition()
+        uiButton.drawTooltip(hoveredButton, mouseX, mouseY)
+    end
 end
 
 function drawMapButton(screenWidth, screenHeight)
@@ -51,6 +63,7 @@ function mousepressed(x, y, button)
         local buttonX, buttonY = uiButton.calcRightPosition(mapButton, screenWidth, TOP_BAR_HEIGHT)
 
         if uiButton.isClicked(mapButton, x, y, buttonX, buttonY) then
+            hoveredButton = nil
             local main = require("main")
             main.switchState("home")
             return
@@ -64,8 +77,10 @@ function mousemoved(x, y, dx, dy)
     local buttonX, buttonY = uiButton.calcRightPosition(mapButton, screenWidth, TOP_BAR_HEIGHT)
 
     if uiButton.isHovered(mapButton, x, y, buttonX, buttonY) then
+        hoveredButton = mapButton
         love.mouse.setCursor(love.mouse.getSystemCursor("hand"))
     else
+        hoveredButton = nil
         love.mouse.setCursor()
     end
 end

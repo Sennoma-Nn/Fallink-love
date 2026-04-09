@@ -7,7 +7,6 @@ local zoom = 1.0
 local displayZoom = 1.0
 local isDragging = false
 local hoveredButton = nil
-local tooltipFont = nil
 local panelTitleFont = nil
 local panelDescFont = nil
 local closeIcon = nil
@@ -135,8 +134,7 @@ local settingsButton = {
     size = 60,
     icon = "settings",
     color = BUTTON_COLOR,
-    name = locales.get("settings", "title"),
-    description = locales.get("settings", "description"),
+    tip = locales.get("tips", "settings"),
 }
 
 local dragStartX = 0
@@ -206,7 +204,7 @@ function load()
     local config = require("src.config")
     
     local tooltipFontSize = config.fonts.sizes.small
-    tooltipFont = love.graphics.newFont(fontPath, tooltipFontSize)
+    uiButton.initTooltipFont(fontPath, tooltipFontSize)
     
     panelTitleFont = love.graphics.newFont(fontPath, 36)
     panelDescFont = love.graphics.newFont(fontPath, 24)
@@ -619,36 +617,7 @@ function drawPanel()
 end
 
 function drawTooltip(button, mouseX, mouseY)
-    local padding = 8
-    local backgroundColor = TOOLTIP_BG_COLOR
-    local textColor = TOOLTIP_TEXT_COLOR
-    local borderColor = TOOLTIP_BORDER_COLOR
-
-    local text = button.name
-    local textWidth = tooltipFont:getWidth(text)
-    local textHeight = tooltipFont:getHeight()
-    local bubbleWidth = textWidth + padding * 2
-    local bubbleHeight = textHeight + padding * 2
-    local bubbleX = mouseX + 20
-    local bubbleY = mouseY + 20
-    local screenWidth = love.graphics.getWidth()
-    local screenHeight = love.graphics.getHeight()
-
-    if bubbleX + bubbleWidth > screenWidth then
-        bubbleX = mouseX - bubbleWidth - 20
-    end
-    if bubbleY + bubbleHeight > screenHeight then
-        bubbleY = mouseY - bubbleHeight - 20
-    end
-
-    love.graphics.setColor(table.unpack(backgroundColor))
-    love.graphics.rectangle("fill", bubbleX, bubbleY, bubbleWidth, bubbleHeight, 4)
-    love.graphics.setColor(table.unpack(borderColor))
-    love.graphics.setLineWidth(1)
-    love.graphics.rectangle("line", bubbleX, bubbleY, bubbleWidth, bubbleHeight, 4)
-    love.graphics.setColor(table.unpack(textColor))
-    love.graphics.setFont(tooltipFont)
-    love.graphics.print(text, bubbleX + padding, bubbleY + padding)
+    uiButton.drawTooltip(button, mouseX, mouseY)
 end
 
 function drawPanelContent(button, panelX, panelY, panelWidth, panelHeight)
