@@ -12,6 +12,7 @@ local mapButton = {
     icon = "map",
     color = config.colors.button,
     tip = function() return locales.get("tips", "map") end,
+    targetState = "home"
 }
 
 local hoveredButton = nil
@@ -46,6 +47,7 @@ local function reloadFonts()
     languageFont = uiButton.getFont("small")
     arrowFont = love.graphics.newFont("src/font/SymbolsNerdFontMono-Regular.ttf", 20)
 end
+
 
 function load(switchState)
     switchStateCallback = switchState
@@ -98,12 +100,8 @@ function mousepressed(x, y, button)
         local screenHeight = love.graphics.getHeight()
         local buttonX, buttonY = uiButton.calcRightPosition(mapButton, screenWidth, TOP_BAR_HEIGHT)
 
-        if uiButton.isClicked(mapButton, x, y, buttonX, buttonY) then
+        if uiButton.handleWithTargetState(mapButton, x, y, buttonX, buttonY, switchStateCallback) then
             hoveredButton = nil
-            love.mouse.setCursor() -- 重置光标
-            if switchStateCallback then
-                switchStateCallback("home")
-            end
             return
         end
 

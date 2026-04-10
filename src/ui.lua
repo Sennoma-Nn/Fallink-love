@@ -1,5 +1,6 @@
 local button = {}
 local config = require("src.config")
+local utils = require("src.utils")
 local fontCache = {}
 
 local panelTitleFont = nil
@@ -113,6 +114,21 @@ function button.drawWithTooltip(btn, x, y, isHovered, mouseX, mouseY)
     if isHovered and btn.tip then
         button.drawTooltip(btn, mouseX, mouseY)
     end
+end
+
+function button.handleWithTargetState(btn, x, y, buttonX, buttonY, switchStateCallback)
+    if button.isClicked(btn, x, y, buttonX, buttonY) then
+        love.mouse.setCursor()
+
+        if btn.targetState and switchStateCallback then
+            local target = utils.getValue(btn.targetState)
+            switchStateCallback(target)
+            return true
+        end
+
+        return true
+    end
+    return false
 end
 
 return button

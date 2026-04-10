@@ -37,7 +37,8 @@ local buttons = {
         color = config.colors.button,
         link = {
             right = 2
-        }
+        },
+        showPanel = true
     },
     {
         id = 2,
@@ -52,7 +53,8 @@ local buttons = {
             left = 1,
             top = 3,
             bottom = 4
-        }
+        },
+        showPanel = true
     },
     {
         id = 3,
@@ -66,7 +68,8 @@ local buttons = {
         link = {
             left = 2,
             right = 3.1
-        }
+        },
+        showPanel = true
     },
     {
         id = 3.1,
@@ -79,7 +82,8 @@ local buttons = {
         color = config.colors.button,
         link = {
             left = 3
-        }
+        },
+        showPanel = true
     },
     {
         id = 4,
@@ -93,7 +97,8 @@ local buttons = {
         link = {
             left = 2,
             right = 4.1
-        }
+        },
+        showPanel = true
     },
     {
         id = 4.1,
@@ -107,7 +112,8 @@ local buttons = {
         link = {
             left = 4,
             right = 5
-        }
+        },
+        showPanel = true
     },
     {
         id = 5,
@@ -120,7 +126,8 @@ local buttons = {
         color = config.colors.button,
         link = {
             bottom = 4.1
-        }
+        },
+        showPanel = true
     }
 }
 
@@ -130,6 +137,7 @@ local settingsButton = {
     icon = "settings",
     color = config.colors.button,
     tip = function() return locales.get("tips", "settings") end,
+    targetState = "settings"
 }
 
 local dragStartX = 0
@@ -416,11 +424,7 @@ function mousereleased(x, y, button)
             local button = settingsButton
             local buttonX, buttonY = uiButton.calcRightPosition(button, love.graphics.getWidth(), TOP_BAR_HEIGHT)
 
-            if uiButton.isClicked(button, x, y, buttonX, buttonY) then
-                love.mouse.setCursor()
-                if switchStateCallback then
-                    switchStateCallback("settings")
-                end
+            if uiButton.handleWithTargetState(button, x, y, buttonX, buttonY, switchStateCallback) then
                 return
             end
 
@@ -453,21 +457,21 @@ function checkButtonClick(worldX, worldY)
 
     for _, button in ipairs(buttons) do
         local halfSize = button.size / 2
-
         if worldX >= button.x - halfSize and worldX <= button.x + halfSize and
             worldY >= button.y - halfSize and worldY <= button.y + halfSize then
             -- print("点击按钮: " .. button.name)
+            if button.showPanel then
+                local screenHeight = love.graphics.getHeight()
 
-            local screenHeight = love.graphics.getHeight()
+                selectedButton = button
+                isPanelVisible = true
+                animationTime = 0
+                overlayAlpha = 0
+                panelY = screenHeight
+                love.mouse.setCursor()
 
-            selectedButton = button
-            isPanelVisible = true
-            animationTime = 0
-            overlayAlpha = 0
-            panelY = screenHeight
-            love.mouse.setCursor()
-
-            return true
+                return true
+            end
         end
     end
     return false
