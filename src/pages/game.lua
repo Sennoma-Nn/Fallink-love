@@ -30,13 +30,13 @@ function getRandomBlockGroup()
         end
         currentGroup = rotateBlockGroup(currentGroup, "R")
     end
-    
+
     return group
 end
 
 function rotateBlockGroup(group, direction)
-    local newGroup = {{}, {}}
-    
+    local newGroup = { {}, {} }
+
     if direction == "0" then
         newGroup[1][1] = group[1][1]
         newGroup[1][2] = group[1][2]
@@ -58,7 +58,7 @@ function rotateBlockGroup(group, direction)
         newGroup[1][2] = invertBlock(group[2][2])
         newGroup[2][2] = invertBlock(group[2][1])
     end
-    
+
     return newGroup
 end
 
@@ -74,7 +74,7 @@ end
 
 local nextAndOperating = {}
 
-local OperatingGroup = {
+local GhostGroupInfo = {
     x = nil,
     rotate = 0 -- 0, R, 2, L
 }
@@ -93,6 +93,8 @@ end
 
 local hImages = {}
 local vImages = {}
+local hgImage = nil
+local vgImage = nil
 local waveImage = nil
 local BLOCK_SIZE = nil
 local BLOCK_WH = nil
@@ -105,6 +107,16 @@ local function drawBlock(value, x, y)
         love.graphics.draw(vImages[1], x, y, 0, BLOCK_WH, BLOCK_WH)
     elseif value == "H" then
         love.graphics.draw(hImages[1], x, y, 0, BLOCK_WH, BLOCK_WH)
+    end
+end
+
+local function drawGhostBlock(value, x, y)
+    love.graphics.setColor(1, 1, 1)
+
+    if value == "V" then
+        love.graphics.draw(vgImage, x, y, 0, BLOCK_WH, BLOCK_WH)
+    elseif value == "H" then
+        love.graphics.draw(hgImage, x, y, 0, BLOCK_WH, BLOCK_WH)
     end
 end
 
@@ -146,15 +158,70 @@ function load(switchState)
         vImages[i] = love.graphics.newImage("src/img/blocks/normal/v" .. i .. ".png")
     end
 
+    hgImage = love.graphics.newImage("src/img/blocks/normal/hg.png")
+    vgImage = love.graphics.newImage("src/img/blocks/normal/vg.png")
     waveImage = love.graphics.newImage("src/img/game/wave.png")
 
-    -- well[1][1] = "V"
-    -- well[1][8] = "H"
-    -- well[8][1] = "H"
-    -- well[8][8] = "V"
+    GhostGroupInfo.x = 4
+    GhostGroupInfo.rotate = "0"
+
+    -- well[8][4] = getRandomBlock()
+    -- well[8][5] = getRandomBlock()
+    -- well[7][5] = getRandomBlock()
 end
 
 function update(dt)
+end
+
+local function calculateGhostPosition(ghostX)
+    if ghostX == nil or ghostX < 1 or ghostX > 7 then
+        return nil
+    end
+
+    local highestRow = 9
+    for col = ghostX, ghostX + 1 do
+        for row = 1, 8 do
+            if well[row][col] ~= 0 then
+                if row < highestRow then
+                    highestRow = row
+                end
+                break
+            end
+        end
+    end
+
+    local ghostY = highestRow - 2
+
+    if ghostY < 1 then
+        return nil
+    end
+
+    return ghostY
+end
+
+local function drawGhostGroup(wellStartX, wellStartY)
+    if GhostGroupInfo.x == nil then
+        return
+    end
+
+    local ghostY = calculateGhostPosition(GhostGroupInfo.x)
+    if ghostY == nil then
+        return
+    end
+
+    local currentGroup = nextAndOperating[1]
+    local rotatedGroup = rotateBlockGroup(currentGroup, GhostGroupInfo.rotate)
+
+    for i = 1, 2 do
+        for j = 1, 2 do
+            local blockValue = rotatedGroup[i][j]
+            if blockValue then
+                local blockX = wellStartX + (GhostGroupInfo.x + j - 2) * BLOCK_SIZE
+                local blockY = wellStartY + (ghostY + i - 2) * BLOCK_SIZE
+                drawGhostBlock(blockValue, blockX, blockY)
+            end
+        end
+    end
 end
 
 local function drawWell(startX, startY, totalWidth, totalHeight, borderWidth)
@@ -182,7 +249,8 @@ local function drawOperatingArea(operatingStartX, operatingStartY, operatingWidt
     local r, g, b, a = love.graphics.getColor()
 
     drawAreaBackground(operatingStartX, operatingStartY, operatingWidth, operatingHeight)
-    drawBorder(operatingStartX, operatingStartY, operatingWidth, operatingHeight, borderWidth, { 1, 1, 0.6, 1 }, true,
+    drawBorder(operatingStartX, operatingStartY, operatingWidth, operatingHeight, borderWidth, { 1.0, 0.8039, 0.4588, 1 },
+    true,
         true, true, true)
 
     local operatingGroup = nextAndOperating[1]
@@ -278,11 +346,31 @@ function draw()
     love.graphics.rectangle("fill", 0, 0, screenWidth, screenHeight)
 
     drawWell(wellStartX, startY, wellWidth, wellHeight, borderWidth)
+    drawGhostGroup(wellStartX, startY)
     drawOperatingArea(operatingStartX, operatingStartY, operatingWidth, operatingHeight, borderWidth)
     drawNextArea(nextStartX, nextStartY, nextWidth, nextHeight, borderWidth)
 end
 
 function keypressed(key)
+    if key == "left" then
+        if GhostGroupInfo.x ~= nil and GhostGroupInfo.x > 1 then
+            GhostGroupInfo.x = GhostGroupInfo.x - 1
+        end
+    elseif key == "right" then
+        if GhostGroupInfo.x ~= nil and GhostGroupInfo.x < 7 then
+            GhostGroupInfo.x = GhostGroupInfo.x + 1
+        end
+    elseif key == "up" then
+        if GhostGroupInfo.rotate == "0" then
+            GhostGroupInfo.rotate = "R"
+        elseif GhostGroupInfo.rotate == "R" then
+            GhostGroupInfo.rotate = "2"
+        elseif GhostGroupInfo.rotate == "2" then
+            GhostGroupInfo.rotate = "L"
+        elseif GhostGroupInfo.rotate == "L" then
+            GhostGroupInfo.rotate = "0"
+        end
+    end
 end
 
 function mousepressed(x, y, button)

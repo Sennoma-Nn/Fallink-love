@@ -54,9 +54,9 @@
      inkscape:groupmode="layer"
      id="layer1"><path
        id="rect1"
-       style="fill:#ffffff;fill-opacity:0.6;stroke:none;stroke-width:0;stroke-dasharray:none;stroke-opacity:1;paint-order:normal"
+       style="fill:#ffffff;fill-opacity:0.40000001;stroke:none;stroke-width:0;stroke-dasharray:none;stroke-opacity:1;paint-order:normal"
        d="M 15,3 13,1 h -3 v 14 h 3 l 2,-2 z M 6,1 H 3 L 1,3 v 10 l 2,2 h 3 z" /><rect
-       style="fill:#ffffff;fill-opacity:0.6;stroke:none;stroke-width:0;stroke-dasharray:none"
+       style="fill:#ffffff;fill-opacity:0.40000001;stroke:none;stroke-width:0;stroke-dasharray:none"
        id="rect2"
        width="16"
        height="2"
