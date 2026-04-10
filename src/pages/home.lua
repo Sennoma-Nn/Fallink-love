@@ -1,6 +1,6 @@
 local config = require("src.config")
 local locales = require("src.locales")
-local uiButton = require("src.ui.ui")
+local uiButton = require("src.ui")
 local utils = require("src.utils")
 
 local switchStateCallback = nil
@@ -31,8 +31,8 @@ local buttons = {
         x = 0,
         y = 0,
         size = LEVEL_BUTTON_SIZE,
-        name = "Test Level - 1",
-        description = "Test",
+        name = function() return locales.get("levels", "test_level").name end,
+        description = function() return locales.get("levels", "test_level").description end,
         icon = "test_icon",
         color = config.colors.button,
         link = {
@@ -129,7 +129,7 @@ local settingsButton = {
     size = 60,
     icon = "settings",
     color = config.colors.button,
-    tip = locales.get("tips", "settings"),
+    tip = function() return locales.get("tips", "settings") end,
 }
 
 local dragStartX = 0
@@ -182,7 +182,6 @@ local function reloadFonts()
     -- print("111 reloadFonts")
     panelTitleFont = uiButton.getFont("large")
     panelDescFont = uiButton.getFont("small")
-    settingsButton.tip = locales.get("tips", "settings")
 end
 
 function load(switchState)
@@ -201,8 +200,6 @@ function load(switchState)
         end
     end
 
-    uiButton.reloadFonts()
-
     local closeIconPath = "src/img/icon/X.png"
     local file = love.filesystem.getInfo(closeIconPath)
     if file then
@@ -218,6 +215,7 @@ function load(switchState)
         reloadFonts()
     end
 
+    reloadFonts()
     locales.addLanguageChangeCallback(languageChangeCallback)
 end
 
@@ -267,7 +265,9 @@ function draw()
     love.graphics.pop()
 
     drawTopBar(screenWidth, screenHeight)
-    drawSettingsButton(screenWidth, screenHeight)
+
+    local buttonX, buttonY = uiButton.calcRightPosition(settingsButton, screenWidth, TOP_BAR_HEIGHT)
+    uiButton.draw(settingsButton, buttonX, buttonY)
 
     if isPanelVisible and selectedButton then
         drawPanel()
@@ -629,23 +629,20 @@ function drawPanelContent(button, panelX, panelY, panelWidth, panelHeight)
     local contentWidth = panelWidth - padding * 2
     local titleHeight = panelTitleFont:getHeight()
     local currentY = contentY + titleHeight + 30
+    local buttonName = utils.getValue(button.name)
+    local buttonDescription = utils.getValue(button.description)
 
     love.graphics.setColor(table.unpack(config.colors.panel_title))
     love.graphics.setFont(panelTitleFont)
-    love.graphics.print(button.name, contentX, contentY)
+    love.graphics.print(buttonName, contentX, contentY)
     love.graphics.setColor(table.unpack(config.colors.panel_desc))
     love.graphics.setFont(panelDescFont)
-    love.graphics.printf(button.description, contentX, currentY, contentWidth, "left")
+    love.graphics.printf(buttonDescription, contentX, currentY, contentWidth, "left")
 end
 
 function drawTopBar(screenWidth, screenHeight)
     love.graphics.setColor(table.unpack(config.colors.top_bar))
     love.graphics.rectangle("fill", 0, 0, screenWidth, TOP_BAR_HEIGHT)
-end
-
-function drawSettingsButton(screenWidth, screenHeight)
-    local buttonX, buttonY = uiButton.calcRightPosition(settingsButton, screenWidth, TOP_BAR_HEIGHT)
-    uiButton.draw(settingsButton, buttonX, buttonY)
 end
 
 function drawCloseButton(panelX, panelY, panelWidth)

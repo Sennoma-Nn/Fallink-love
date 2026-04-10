@@ -62,6 +62,14 @@ function utils.isEmpty(table)
     return true
 end
 
+function utils.getValue(value)
+    if type(value) == "function" then
+        return value()
+    else
+        return value
+    end
+end
+
 function utils.mergeTables(t1, t2)
     local result = utils.shallowCopy(t1)
     for k, v in pairs(t2) do

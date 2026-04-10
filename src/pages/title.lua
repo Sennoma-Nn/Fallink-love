@@ -2,7 +2,7 @@ local titleImage, promptFont
 local blinkTimer = 0
 local config = require("src.config")
 local locales = require("src.locales")
-local uiButton = require("src.ui.ui")
+local uiButton = require("src.ui")
 local switchStateCallback = nil
 
 function load(switchState)

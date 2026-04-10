@@ -1,7 +1,6 @@
 local button = {}
 local config = require("src.config")
 
-local tooltipFont = nil
 local panelTitleFont = nil
 local panelDescFont = nil
 local languageFont = nil
@@ -59,21 +58,13 @@ function button.isHovered(btn, x, y, buttonX, buttonY)
     return button.isClicked(btn, x, y, buttonX, buttonY)
 end
 
-function button.initTooltipFont(fontPath, fontSize)
-    if not tooltipFont then
-        tooltipFont = love.graphics.newFont(fontPath, fontSize)
-    end
-end
-
 function button.drawTooltip(btn, mouseX, mouseY)
-    if not tooltipFont then
-        return
-    end
-
+    local font = button.getFont("small")
     local padding = 8
-    local text = btn.tip or btn.name or ""
-    local textWidth = tooltipFont:getWidth(text)
-    local textHeight = tooltipFont:getHeight()
+    local utils = require("src.utils")
+    local text = utils.getValue(btn.tip) or utils.getValue(btn.name) or ""
+    local textWidth = font:getWidth(text)
+    local textHeight = font:getHeight()
     local bubbleWidth = textWidth + padding * 2
     local bubbleHeight = textHeight + padding * 2
     local bubbleX = mouseX + 20
@@ -94,17 +85,8 @@ function button.drawTooltip(btn, mouseX, mouseY)
     love.graphics.setLineWidth(1)
     love.graphics.rectangle("line", bubbleX, bubbleY, bubbleWidth, bubbleHeight, 4)
     love.graphics.setColor(table.unpack(config.colors.tooltip_text))
-    love.graphics.setFont(tooltipFont)
+    love.graphics.setFont(font)
     love.graphics.print(text, bubbleX + padding, bubbleY + padding)
-end
-
-function button.reloadFonts()
-    local locales = require("src.locales")
-    local config = require("src.config")
-    local fontPath = locales.getFontPath()
-
-    -- print("reloadFonts")
-    tooltipFont = love.graphics.newFont(fontPath, config.fonts.sizes.small)
 end
 
 function button.getFont(sizeName)
@@ -116,8 +98,11 @@ function button.getFont(sizeName)
     return love.graphics.newFont(fontPath, size)
 end
 
-function button.getTooltipFont()
-    return tooltipFont
+function button.drawWithTooltip(btn, x, y, isHovered, mouseX, mouseY)
+    button.draw(btn, x, y)
+    if isHovered and btn.tip then
+        button.drawTooltip(btn, mouseX, mouseY)
+    end
 end
 
 return button

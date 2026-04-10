@@ -1,6 +1,6 @@
 local config = require("src.config")
 local locales = require("src.locales")
-local uiButton = require("src.ui.ui")
+local uiButton = require("src.ui")
 local utils = require("src.utils")
 local switchStateCallback = nil
 
@@ -11,7 +11,7 @@ local mapButton = {
     size = 60,
     icon = "map",
     color = config.colors.button,
-    tip = locales.get("tips", "map"),
+    tip = function() return locales.get("tips", "map") end,
 }
 
 local hoveredButton = nil
@@ -43,8 +43,6 @@ local languageChangeCallback = nil
 local function reloadFonts()
     languageFont = uiButton.getFont("small")
     arrowFont = love.graphics.newFont("src/font/SymbolsNerdFontMono-Regular.ttf", 20)
-
-    mapButton.tip = locales.get("tips", "map")
 end
 
 function load(switchState)
@@ -118,7 +116,6 @@ function mousepressed(x, y, button)
                 local prevLang = locales.getPrevLanguage()
                 locales.setLanguage(prevLang)
                 languageSelector.currentLanguage = prevLang
-                uiButton.reloadFonts()
                 reloadFonts()
                 return
             end
@@ -127,7 +124,6 @@ function mousepressed(x, y, button)
                 local nextLang = locales.getNextLanguage()
                 locales.setLanguage(nextLang)
                 languageSelector.currentLanguage = nextLang
-                uiButton.reloadFonts()
                 reloadFonts()
                 return
             end
