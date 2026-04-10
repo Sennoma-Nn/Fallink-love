@@ -1,6 +1,7 @@
 local config = require("src.config")
 local locales = require("src.locales")
 local uiButton = require("src.ui.ui")
+local utils = require("src.utils")
 
 local TOP_BAR_HEIGHT = 92
 
@@ -40,7 +41,7 @@ local languageChangeCallback = nil
 
 local function reloadFonts()
     languageFont = uiButton.getFont("small")
-    arrowFont = love.graphics.newFont("src/font/SymbolsNerdFontMono-Regular.ttf", 32)
+    arrowFont = love.graphics.newFont("src/font/SymbolsNerdFontMono-Regular.ttf", 20)
     
     mapButton.tip = locales.get("tips", "map")
 end
@@ -84,7 +85,8 @@ function draw()
 end
 
 function drawMapButton(screenWidth, screenHeight)
-    uiButton.drawMapButton(mapButton, screenWidth, screenHeight, TOP_BAR_HEIGHT)
+    local buttonX, buttonY = uiButton.calcRightPosition(mapButton, screenWidth, TOP_BAR_HEIGHT)
+    uiButton.draw(mapButton, buttonX, buttonY)
 end
 
 function keypressed(key)
@@ -108,7 +110,7 @@ function mousepressed(x, y, button)
         end
         
         if languageSelector.width then
-            if isPointInRect(x, y, languageSelector.leftArrow) then
+            if utils.isPointInRect(x, y, languageSelector.leftArrow) then
                 local prevLang = locales.getPrevLanguage()
                 locales.setLanguage(prevLang)
                 languageSelector.currentLanguage = prevLang
@@ -117,7 +119,7 @@ function mousepressed(x, y, button)
                 return
             end
             
-            if isPointInRect(x, y, languageSelector.rightArrow) then
+            if utils.isPointInRect(x, y, languageSelector.rightArrow) then
                 local nextLang = locales.getNextLanguage()
                 locales.setLanguage(nextLang)
                 languageSelector.currentLanguage = nextLang
@@ -138,8 +140,8 @@ function mousemoved(x, y, dx, dy)
         hoveredButton = mapButton
         love.mouse.setCursor(love.mouse.getSystemCursor("hand"))
     elseif languageSelector.width then
-        if isPointInRect(x, y, languageSelector.leftArrow) or 
-           isPointInRect(x, y, languageSelector.rightArrow) then
+        if utils.isPointInRect(x, y, languageSelector.leftArrow) or 
+           utils.isPointInRect(x, y, languageSelector.rightArrow) then
             love.mouse.setCursor(love.mouse.getSystemCursor("hand"))
             hoveredButton = nil
         else
@@ -167,9 +169,9 @@ function drawLanguageSelector(screenWidth, screenHeight)
     local width = selector.width
     local height = selector.height
     
-    love.graphics.setColor(0.1, 0.1, 0.1, 0.8)
+    love.graphics.setColor(table.unpack(config.colors.panel_bg))
     love.graphics.rectangle("fill", x, y, width, height, 8)
-    love.graphics.setColor(0.3, 0.3, 0.3, 1)
+    love.graphics.setColor(table.unpack(config.colors.panel_border))
     love.graphics.setLineWidth(2)
     love.graphics.rectangle("line", x, y, width, height, 8)
     
@@ -197,13 +199,8 @@ function drawLanguageSelector(screenWidth, screenHeight)
     love.graphics.print(currentLangName, languageTextX, y + (height - languageFont:getHeight()) / 2)
     love.graphics.setFont(arrowFont)
     love.graphics.setColor(1, 1, 1, 1)
-    love.graphics.print("", selector.leftArrow.x + (arrowWidth - arrowFont:getWidth("")) / 2,  selector.leftArrow.y + (arrowHeight - arrowFont:getHeight()) / 2)
-    love.graphics.print("", selector.rightArrow.x + (arrowWidth - arrowFont:getWidth("")) / 2,  selector.rightArrow.y + (arrowHeight - arrowFont:getHeight()) / 2)
-end
-
-function isPointInRect(x, y, rect)
-    return x >= rect.x and x <= rect.x + rect.width and
-           y >= rect.y and y <= rect.y + rect.height
+    love.graphics.print("", selector.leftArrow.x + (arrowWidth - arrowFont:getWidth("")) / 2,  selector.leftArrow.y + (arrowHeight - arrowFont:getHeight()) / 2)
+    love.graphics.print("", selector.rightArrow.x + (arrowWidth - arrowFont:getWidth("")) / 2,  selector.rightArrow.y + (arrowHeight - arrowFont:getHeight()) / 2)
 end
 
 return {

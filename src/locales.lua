@@ -72,8 +72,13 @@ function Locales.getSupportedLanguages()
     return Locales.languages
 end
 
+local languageChangeCallbacks = {}
+
 function Locales.setLanguage(langCode)
     Locales.current = langCode
+    for _, callback in ipairs(languageChangeCallbacks) do
+        callback(langCode)
+    end
 end
 
 function Locales.getLanguageName(langCode)
@@ -114,8 +119,6 @@ function Locales.getPrevLanguage()
     return codes[prevIndex]
 end
 
-local languageChangeCallbacks = {}
-
 function Locales.addLanguageChangeCallback(callback)
     table.insert(languageChangeCallbacks, callback)
 end
@@ -134,13 +137,6 @@ function Locales.notifyLanguageChange()
     for _, callback in ipairs(languageChangeCallbacks) do
         callback(Locales.current)
     end
-end
-
-local originalSetLanguage = Locales.setLanguage
-function Locales.setLanguage(langCode)
-    print("Locales.setLanguage " .. langCode)
-    originalSetLanguage(langCode)
-    Locales.notifyLanguageChange()
 end
 
 return Locales

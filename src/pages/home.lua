@@ -180,7 +180,7 @@ end
 local languageChangeCallback = nil
 
 local function reloadFonts()
-    print("111 reloadFonts")
+    -- print("111 reloadFonts")
     panelTitleFont = uiButton.getFont("large")
     panelDescFont = uiButton.getFont("small")
     settingsButton.tip = locales.get("tips", "settings")
@@ -214,7 +214,7 @@ function load()
     end
     
     languageChangeCallback = function(langCode)
-        print("222 " .. langCode)
+        -- print("222 " .. langCode)
         reloadFonts()
     end
     
@@ -284,10 +284,6 @@ function drawButton(button)
 end
 
 function keypressed(key)
-    if key == "escape" then
-        local main = require("main")
-        main.switchState("title")
-    end
 end
 
 function mousepressed(x, y, button)
@@ -647,7 +643,8 @@ function drawTopBar(screenWidth, screenHeight)
 end
 
 function drawSettingsButton(screenWidth, screenHeight)
-    uiButton.drawSettingsButton(settingsButton, screenWidth, screenHeight, TOP_BAR_HEIGHT)
+    local buttonX, buttonY = uiButton.calcRightPosition(settingsButton, screenWidth, TOP_BAR_HEIGHT)
+    uiButton.draw(settingsButton, buttonX, buttonY)
 end
 
 function drawCloseButton(panelX, panelY, panelWidth)

@@ -1,9 +1,5 @@
 local button = {}
-
-local BUTTON_COLOR = { 1, 1, 1, 0.2 }
-local TOOLTIP_BG_COLOR = { 0.1, 0.1, 0.1, 0.95 }
-local TOOLTIP_BORDER_COLOR = { 0.3, 0.3, 0.3, 1 }
-local TOOLTIP_TEXT_COLOR = { 1, 1, 1, 1 }
+local config = require("src.config")
 
 local tooltipFont = nil
 local panelTitleFont = nil
@@ -25,7 +21,6 @@ function button.draw(btn, x, y)
     
     love.graphics.setColor(table.unpack(btn.color))
     love.graphics.rectangle("fill", x - halfSize, y - halfSize, btn.size, btn.size, radius)
-    
     love.graphics.setColor(1, 1, 1, 1)
     love.graphics.setLineWidth(4)
     love.graphics.rectangle("line", x - halfSize, y - halfSize, btn.size, btn.size, radius)
@@ -64,15 +59,6 @@ function button.isHovered(btn, x, y, buttonX, buttonY)
     return button.isClicked(btn, x, y, buttonX, buttonY)
 end
 
-function button.drawSettingsButton(btn, screenWidth, screenHeight, topBarHeight)
-    local buttonX, buttonY = button.calcRightPosition(btn, screenWidth, topBarHeight)
-    return button.draw(btn, buttonX, buttonY)
-end
-
-function button.drawMapButton(btn, screenWidth, screenHeight, topBarHeight)
-    local buttonX, buttonY = button.calcRightPosition(btn, screenWidth, topBarHeight)
-    return button.draw(btn, buttonX, buttonY)
-end
 
 function button.initTooltipFont(fontPath, fontSize)
     if not tooltipFont then
@@ -86,10 +72,6 @@ function button.drawTooltip(btn, mouseX, mouseY)
     end
     
     local padding = 8
-    local backgroundColor = TOOLTIP_BG_COLOR
-    local textColor = TOOLTIP_TEXT_COLOR
-    local borderColor = TOOLTIP_BORDER_COLOR
-
     local text = btn.tip or btn.name or ""
     local textWidth = tooltipFont:getWidth(text)
     local textHeight = tooltipFont:getHeight()
@@ -107,12 +89,12 @@ function button.drawTooltip(btn, mouseX, mouseY)
         bubbleY = mouseY - bubbleHeight - 20
     end
 
-    love.graphics.setColor(table.unpack(backgroundColor))
+    love.graphics.setColor(table.unpack(config.colors.tooltip_bg))
     love.graphics.rectangle("fill", bubbleX, bubbleY, bubbleWidth, bubbleHeight, 4)
-    love.graphics.setColor(table.unpack(borderColor))
+    love.graphics.setColor(table.unpack(config.colors.tooltip_border))
     love.graphics.setLineWidth(1)
     love.graphics.rectangle("line", bubbleX, bubbleY, bubbleWidth, bubbleHeight, 4)
-    love.graphics.setColor(table.unpack(textColor))
+    love.graphics.setColor(table.unpack(config.colors.tooltip_text))
     love.graphics.setFont(tooltipFont)
     love.graphics.print(text, bubbleX + padding, bubbleY + padding)
 end
@@ -122,7 +104,7 @@ function button.reloadFonts()
     local config = require("src.config")
     local fontPath = locales.getFontPath()
     
-    print("reloadFonts")
+    -- print("reloadFonts")
     tooltipFont = love.graphics.newFont(fontPath, config.fonts.sizes.small)
 end
 
@@ -137,10 +119,6 @@ end
 
 function button.getTooltipFont()
     return tooltipFont
-end
-
-function button.initTooltipFont(fontPath, fontSize)
-    tooltipFont = love.graphics.newFont(fontPath, fontSize)
 end
 
 return button
