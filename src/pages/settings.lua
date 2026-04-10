@@ -1,4 +1,4 @@
-local config = require("src.config")
+local config = require("src.game_config")
 local locales = require("src.locales")
 local uiButton = require("src.ui")
 local utils = require("src.utils")

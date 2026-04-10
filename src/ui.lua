@@ -1,5 +1,5 @@
 local button = {}
-local config = require("src.config")
+local config = require("src.game_config")
 local utils = require("src.utils")
 local fontCache = {}
 
@@ -93,7 +93,7 @@ end
 
 function button.getFont(sizeName)
     local locales = require("src.locales")
-    local config = require("src.config")
+    local config = require("src.game_config")
     local fontPath = locales.getFontPath()
     local size = config.fonts.sizes[sizeName]
     local cacheKey = fontPath .. "_" .. tostring(size)

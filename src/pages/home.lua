@@ -1,4 +1,4 @@
-local config = require("src.config")
+local config = require("src.game_config")
 local locales = require("src.locales")
 local uiButton = require("src.ui")
 local utils = require("src.utils")
@@ -319,7 +319,7 @@ function mousepressed(x, y, button)
                 love.mouse.setCursor()
                 return
             end
-            
+
             local startButtonRect = getStartButtonRect(panelX, panelY, panelWidth, panelHeight)
             if utils.isPointInRect(x, y, startButtonRect) then
                 love.mouse.setCursor()
@@ -384,13 +384,13 @@ function mousemoved(x, y, dx, dy)
                 love.mouse.setCursor(love.mouse.getSystemCursor("hand"))
                 return
             end
-            
+
             local startButtonRect = getStartButtonRect(panelX, panelY, panelWidth, panelHeight)
             if utils.isPointInRect(x, y, startButtonRect) then
                 love.mouse.setCursor(love.mouse.getSystemCursor("hand"))
                 return
             end
-            
+
             love.mouse.setCursor()
         else
             love.mouse.setCursor()
@@ -677,7 +677,7 @@ function getStartButtonRect(panelX, panelY, panelWidth, panelHeight)
     local buttonHeight = 60
     local buttonX = panelX + panelWidth / 2
     local buttonY = panelY + panelHeight - TOP_BAR_HEIGHT - 16 - buttonHeight / 2 - 32
-    
+
     return {
         x = buttonX - buttonWidth / 2,
         y = buttonY - buttonHeight / 2,
