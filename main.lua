@@ -2,7 +2,7 @@ local currentState = nil
 local nextState = nil
 local transitionTimer = 0
 local transitionPhase = "none" -- "none" / "fade_in" / "fade_out"
-local titlePage, homePage, settingsPage
+local titlePage, homePage, settingsPage, gamePage
 
 local function switchState(newState)
     if transitionPhase ~= "none" then
@@ -17,9 +17,11 @@ function love.load()
     titlePage = require("src.pages.title")
     homePage = require("src.pages.home")
     settingsPage = require("src.pages.settings")
+    gamePage = require("src.game")
     titlePage.load(switchState)
     homePage.load(switchState)
     settingsPage.load(switchState)
+    gamePage.load(switchState)
     currentState = "title"
 end
 
@@ -43,6 +45,8 @@ function love.update(dt)
         homePage.update(dt)
     elseif currentState == "settings" then
         settingsPage.update(dt)
+    elseif currentState == "game" then
+        gamePage.update(dt)
     end
 end
 
@@ -53,6 +57,8 @@ function love.draw()
         homePage.draw()
     elseif currentState == "settings" then
         settingsPage.draw()
+    elseif currentState == "game" then
+        gamePage.draw()
     end
 
     if transitionPhase ~= "none" then
@@ -81,6 +87,8 @@ function love.keypressed(key)
         homePage.keypressed(key)
     elseif currentState == "settings" then
         settingsPage.keypressed(key)
+    elseif currentState == "game" then
+        gamePage.keypressed(key)
     end
 end
 
@@ -95,6 +103,8 @@ function love.mousepressed(x, y, button)
         homePage.mousepressed(x, y, button)
     elseif currentState == "settings" then
         settingsPage.mousepressed(x, y, button)
+    elseif currentState == "game" then
+        gamePage.mousepressed(x, y, button)
     end
 end
 
@@ -108,6 +118,8 @@ function love.mousemoved(x, y, dx, dy)
         homePage.mousemoved(x, y, dx, dy)
     elseif currentState == "settings" then
         settingsPage.mousemoved(x, y, dx, dy)
+    elseif currentState == "game" then
+        gamePage.mousemoved(x, y, dx, dy)
     end
 end
 
@@ -121,6 +133,8 @@ function love.mousereleased(x, y, button)
         homePage.mousereleased(x, y, button)
     elseif currentState == "settings" then
         settingsPage.mousereleased(x, y, button)
+    elseif currentState == "game" then
+        gamePage.mousereleased(x, y, button)
     end
 end
 
@@ -134,6 +148,8 @@ function love.wheelmoved(x, y)
         homePage.wheelmoved(x, y)
     elseif currentState == "settings" then
         settingsPage.wheelmoved(x, y)
+    elseif currentState == "game" then
+        gamePage.wheelmoved(x, y)
     end
 end
 
