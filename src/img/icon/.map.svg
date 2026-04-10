@@ -27,7 +27,7 @@
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="px"
      inkscape:zoom="25.853592"
-     inkscape:cx="6.8075648"
+     inkscape:cx="6.846244"
      inkscape:cy="11.507105"
      inkscape:window-width="1880"
      inkscape:window-height="1048"
@@ -50,9 +50,9 @@
        x="0"
        y="0" />
     <path
-       d="M 3.5,6.11975 V 11.762 L 6.1015624,10.12147 V 4.4792204 Z m 5.601562,5.40203 V 5.87953 L 6.863281,4.4792204 V 10.12147 Z m 0.761719,0 V 5.87953 L 12.5,4.239 v 5.64225 z"
+       style="font-size:16px;font-family:'CaskaydiaCove Nerd Font Mono';-inkscape-font-specification:'CaskaydiaCove Nerd Font Mono';stroke-width:0.5;stroke-linecap:square;stroke-linejoin:round"
+       d="M 9.562,11.582389 6.4370001,10.691824 V 4.4188121 L 9.562,5.3093769 Z m 0.515625,-0.02344 V 5.270317 L 12.15575,4.442248 q 0.1875,-0.07812 0.359375,0.03906 Q 12.687,4.5984879 12.687,4.8094112 v 5.4449438 q 0,0.11718 -0.0625,0.218735 -0.0625,0.09374 -0.1875,0.148428 z M 3.562,5.3796816 5.9213751,4.442245 v 6.288637 L 3.84325,11.558951 Q 3.65575,11.637076 3.483875,11.512084 3.312,11.394904 3.312,11.191793 V 5.746847 Q 3.312,5.629668 3.3745,5.5281121 3.452625,5.4265564 3.562,5.3796846 Z"
        id="text1"
-       style="font-weight:bold;font-size:12px;font-family:'CaskaydiaCove Nerd Font';-inkscape-font-specification:'CaskaydiaCove Nerd Font Bold';fill:#000000;stroke-width:0.5;stroke-linecap:square;stroke-linejoin:round;fill-opacity:1"
-       aria-label="" />
+       aria-label="" />
   </g>
 </svg>

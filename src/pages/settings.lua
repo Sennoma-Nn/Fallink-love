@@ -41,6 +41,7 @@ local arrowFont = nil
 local languageChangeCallback = nil
 
 local function reloadFonts()
+    uiButton.clearCache()
     languageFont = uiButton.getFont("small")
     arrowFont = love.graphics.newFont("src/font/SymbolsNerdFontMono-Regular.ttf", 20)
 end
@@ -48,20 +49,12 @@ end
 function load(switchState)
     switchStateCallback = switchState
     uiButton.preloadIcon(mapButton)
-
     reloadFonts()
-    languageSelector.currentLanguage = locales.getCurrentLanguage()
 
-    if languageChangeCallback then
-        locales.removeLanguageChangeCallback(languageChangeCallback)
-    end
-
-    languageChangeCallback = function(langCode)
+    locales.addLanguageChangeCallback("settings_page", function()
         reloadFonts()
         languageSelector.currentLanguage = locales.getCurrentLanguage()
-    end
-
-    locales.addLanguageChangeCallback(languageChangeCallback)
+    end)
 end
 
 function update(dt)

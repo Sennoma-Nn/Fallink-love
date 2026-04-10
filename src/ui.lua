@@ -1,5 +1,6 @@
 local button = {}
 local config = require("src.config")
+local fontCache = {}
 
 local panelTitleFont = nil
 local panelDescFont = nil
@@ -93,9 +94,18 @@ function button.getFont(sizeName)
     local locales = require("src.locales")
     local config = require("src.config")
     local fontPath = locales.getFontPath()
-
     local size = config.fonts.sizes[sizeName]
-    return love.graphics.newFont(fontPath, size)
+    local cacheKey = fontPath .. "_" .. tostring(size)
+
+    if not fontCache[cacheKey] then
+        fontCache[cacheKey] = love.graphics.newFont(fontPath, size)
+    end
+
+    return fontCache[cacheKey]
+end
+
+function button.clearCache()
+    fontCache = {}
 end
 
 function button.drawWithTooltip(btn, x, y, isHovered, mouseX, mouseY)

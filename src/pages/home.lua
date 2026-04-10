@@ -180,6 +180,7 @@ local languageChangeCallback = nil
 
 local function reloadFonts()
     -- print("111 reloadFonts")
+    uiButton.clearCache()
     panelTitleFont = uiButton.getFont("large")
     panelDescFont = uiButton.getFont("small")
 end
@@ -206,17 +207,11 @@ function load(switchState)
         closeIcon = love.graphics.newImage(closeIconPath)
     end
 
-    if languageChangeCallback then
-        locales.removeLanguageChangeCallback(languageChangeCallback)
-    end
-
-    languageChangeCallback = function(langCode)
-        -- print("222 " .. langCode)
-        reloadFonts()
-    end
-
     reloadFonts()
-    locales.addLanguageChangeCallback(languageChangeCallback)
+    
+    locales.addLanguageChangeCallback("home_page", function(langCode)
+        reloadFonts()
+    end)
 end
 
 function update(dt)

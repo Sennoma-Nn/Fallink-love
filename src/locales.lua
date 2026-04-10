@@ -38,7 +38,7 @@ local languageChangeCallbacks = {}
 
 function Locales.setLanguage(langCode)
     Locales.current = langCode
-    for _, callback in ipairs(languageChangeCallbacks) do
+    for _, callback in pairs(languageChangeCallbacks) do
         callback(langCode)
     end
 end
@@ -81,22 +81,20 @@ function Locales.getPrevLanguage()
     return codes[prevIndex]
 end
 
-function Locales.addLanguageChangeCallback(callback)
-    table.insert(languageChangeCallbacks, callback)
+function Locales.addLanguageChangeCallback(id, callback)
+    languageChangeCallbacks[id] = callback
 end
 
-function Locales.removeLanguageChangeCallback(callback)
-    for i, cb in ipairs(languageChangeCallbacks) do
-        if cb == callback then
-            table.remove(languageChangeCallbacks, i)
-            return true
-        end
+function Locales.removeLanguageChangeCallback(id)
+    if languageChangeCallbacks[id] then
+        languageChangeCallbacks[id] = nil
+        return true
     end
     return false
 end
 
 function Locales.notifyLanguageChange()
-    for _, callback in ipairs(languageChangeCallbacks) do
+    for _, callback in pairs(languageChangeCallbacks) do
         callback(Locales.current)
     end
 end
