@@ -23,10 +23,61 @@ function getRandomBlockGroup()
         isValid = not (isPattern1 or isPattern2)
     end
 
+    local currentGroup = group
+    for _ = 1, 4 do
+        if currentGroup[1][1] == "H" and currentGroup[1][2] == "H" then
+            return currentGroup
+        end
+        currentGroup = rotateBlockGroup(currentGroup, "R")
+    end
+    
     return group
 end
 
+function rotateBlockGroup(group, direction)
+    local newGroup = {{}, {}}
+    
+    if direction == "0" then
+        newGroup[1][1] = group[1][1]
+        newGroup[1][2] = group[1][2]
+        newGroup[2][1] = group[2][1]
+        newGroup[2][2] = group[2][2]
+    elseif direction == "R" then
+        newGroup[1][2] = invertBlock(group[1][1])
+        newGroup[2][2] = invertBlock(group[1][2])
+        newGroup[2][1] = invertBlock(group[2][2])
+        newGroup[1][1] = invertBlock(group[2][1])
+    elseif direction == "2" then
+        newGroup[2][2] = group[1][1]
+        newGroup[2][1] = group[1][2]
+        newGroup[1][1] = group[2][2]
+        newGroup[1][2] = group[2][1]
+    elseif direction == "L" then
+        newGroup[2][1] = invertBlock(group[1][1])
+        newGroup[1][1] = invertBlock(group[1][2])
+        newGroup[1][2] = invertBlock(group[2][2])
+        newGroup[2][2] = invertBlock(group[2][1])
+    end
+    
+    return newGroup
+end
+
+function invertBlock(block)
+    if block == "H" then
+        return "V"
+    elseif block == "V" then
+        return "H"
+    else
+        return block
+    end
+end
+
 local nextAndOperating = {}
+
+local OperatingGroup = {
+    x = nil,
+    rotate = 0 -- 0, R, 2, L
+}
 
 for i = 1, 8 do
     well[i] = {}
