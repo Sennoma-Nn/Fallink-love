@@ -1,7 +1,7 @@
 local currentState = "title"
 local nextState = nil
 local transitionTimer = 0
-local transitionPhase = "none"  -- "none" / "fade_in" / "fade_out"
+local transitionPhase = "none" -- "none" / "fade_in" / "fade_out"
 local titlePage, homePage, settingsPage
 
 local function switchState(newState)
@@ -17,9 +17,9 @@ function love.load()
     titlePage = require("src.pages.title")
     homePage = require("src.pages.home")
     settingsPage = require("src.pages.settings")
-    titlePage.load()
-    homePage.load()
-    settingsPage.load()
+    titlePage.load(switchState)
+    homePage.load(switchState)
+    settingsPage.load(switchState)
 end
 
 function love.update(dt)
@@ -64,7 +64,7 @@ function love.draw()
 
         love.graphics.setColor(0, 0, 0, alpha)
         love.graphics.rectangle("fill", 0, 0, love.graphics.getWidth(), love.graphics.getHeight())
-        
+
         love.graphics.setColor(1, 1, 1, 1)
     end
 end

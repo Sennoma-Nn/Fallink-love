@@ -2,6 +2,7 @@ local config = require("src.config")
 local locales = require("src.locales")
 local uiButton = require("src.ui.ui")
 local utils = require("src.utils")
+local switchStateCallback = nil
 
 local TOP_BAR_HEIGHT = 92
 
@@ -42,25 +43,26 @@ local languageChangeCallback = nil
 local function reloadFonts()
     languageFont = uiButton.getFont("small")
     arrowFont = love.graphics.newFont("src/font/SymbolsNerdFontMono-Regular.ttf", 20)
-    
+
     mapButton.tip = locales.get("tips", "map")
 end
 
-function load()
+function load(switchState)
+    switchStateCallback = switchState
     uiButton.preloadIcon(mapButton)
-    
+
     reloadFonts()
     languageSelector.currentLanguage = locales.getCurrentLanguage()
-    
+
     if languageChangeCallback then
         locales.removeLanguageChangeCallback(languageChangeCallback)
     end
-    
+
     languageChangeCallback = function(langCode)
         reloadFonts()
         languageSelector.currentLanguage = locales.getCurrentLanguage()
     end
-    
+
     locales.addLanguageChangeCallback(languageChangeCallback)
 end
 
@@ -74,10 +76,10 @@ function draw()
     love.graphics.clear(table.unpack(config.colors.background))
     love.graphics.setColor(table.unpack(config.colors.top_bar))
     love.graphics.rectangle("fill", 0, 0, screenWidth, TOP_BAR_HEIGHT)
-    
+
     drawMapButton(screenWidth, screenHeight)
     drawLanguageSelector(screenWidth, screenHeight)
-    
+
     if hoveredButton then
         local mouseX, mouseY = love.mouse.getPosition()
         uiButton.drawTooltip(hoveredButton, mouseX, mouseY)
@@ -91,8 +93,9 @@ end
 
 function keypressed(key)
     if key == "escape" then
-        local main = require("main")
-        main.switchState("home")
+        if switchStateCallback then
+            switchStateCallback("home")
+        end
     end
 end
 
@@ -104,11 +107,12 @@ function mousepressed(x, y, button)
 
         if uiButton.isClicked(mapButton, x, y, buttonX, buttonY) then
             hoveredButton = nil
-            local main = require("main")
-            main.switchState("home")
+            if switchStateCallback then
+                switchStateCallback("home")
+            end
             return
         end
-        
+
         if languageSelector.width then
             if utils.isPointInRect(x, y, languageSelector.leftArrow) then
                 local prevLang = locales.getPrevLanguage()
@@ -118,7 +122,7 @@ function mousepressed(x, y, button)
                 reloadFonts()
                 return
             end
-            
+
             if utils.isPointInRect(x, y, languageSelector.rightArrow) then
                 local nextLang = locales.getNextLanguage()
                 locales.setLanguage(nextLang)
@@ -140,8 +144,8 @@ function mousemoved(x, y, dx, dy)
         hoveredButton = mapButton
         love.mouse.setCursor(love.mouse.getSystemCursor("hand"))
     elseif languageSelector.width then
-        if utils.isPointInRect(x, y, languageSelector.leftArrow) or 
-           utils.isPointInRect(x, y, languageSelector.rightArrow) then
+        if utils.isPointInRect(x, y, languageSelector.leftArrow) or
+            utils.isPointInRect(x, y, languageSelector.rightArrow) then
             love.mouse.setCursor(love.mouse.getSystemCursor("hand"))
             hoveredButton = nil
         else
@@ -162,45 +166,47 @@ end
 
 function drawLanguageSelector(screenWidth, screenHeight)
     languageSelector.width = screenWidth - 32
-    
+
     local selector = languageSelector
     local x = selector.x
     local y = selector.y
     local width = selector.width
     local height = selector.height
-    
+
     love.graphics.setColor(table.unpack(config.colors.panel_bg))
     love.graphics.rectangle("fill", x, y, width, height, 8)
     love.graphics.setColor(table.unpack(config.colors.panel_border))
     love.graphics.setLineWidth(2)
     love.graphics.rectangle("line", x, y, width, height, 8)
-    
+
     local padding = 16
     local arrowWidth = 40
     local arrowHeight = 40
     local languageText = locales.get("tips", "language")
     local languageTextWidth = languageFont:getWidth(languageText)
-    
+
     love.graphics.setColor(table.unpack(config.colors.text))
     love.graphics.setFont(languageFont)
     love.graphics.print(languageText, x + padding, y + (height - languageFont:getHeight()) / 2)
-    
+
     local currentLangName = locales.getLanguageName(selector.currentLanguage)
     local langTextWidth = languageFont:getWidth(currentLangName)
     local totalWidth = arrowWidth + 10 + langTextWidth + 10 + arrowWidth
     local rightAreaX = x + width - padding - totalWidth
     local languageTextX = rightAreaX + arrowWidth + 10
-    
+
     selector.leftArrow.x = rightAreaX
     selector.leftArrow.y = y + (height - arrowHeight) / 2
     selector.rightArrow.x = languageTextX + langTextWidth + 10
     selector.rightArrow.y = y + (height - arrowHeight) / 2
-    
+
     love.graphics.print(currentLangName, languageTextX, y + (height - languageFont:getHeight()) / 2)
     love.graphics.setFont(arrowFont)
     love.graphics.setColor(1, 1, 1, 1)
-    love.graphics.print("", selector.leftArrow.x + (arrowWidth - arrowFont:getWidth("")) / 2,  selector.leftArrow.y + (arrowHeight - arrowFont:getHeight()) / 2)
-    love.graphics.print("", selector.rightArrow.x + (arrowWidth - arrowFont:getWidth("")) / 2,  selector.rightArrow.y + (arrowHeight - arrowFont:getHeight()) / 2)
+    love.graphics.print("", selector.leftArrow.x + (arrowWidth - arrowFont:getWidth("")) / 2,
+        selector.leftArrow.y + (arrowHeight - arrowFont:getHeight()) / 2)
+    love.graphics.print("", selector.rightArrow.x + (arrowWidth - arrowFont:getWidth("")) / 2,
+        selector.rightArrow.y + (arrowHeight - arrowFont:getHeight()) / 2)
 end
 
 return {

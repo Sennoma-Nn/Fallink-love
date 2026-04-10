@@ -2,7 +2,7 @@ local utils = {}
 
 function utils.isPointInRect(x, y, rect)
     return x >= rect.x and x <= rect.x + rect.width and
-           y >= rect.y and y <= rect.y + rect.height
+        y >= rect.y and y <= rect.y + rect.height
 end
 
 function utils.distance(x1, y1, x2, y2)
@@ -37,13 +37,13 @@ function utils.easeInOutQuad(t)
     if t < 0.5 then
         return 2 * t * t
     else
-        return 1 - math.pow(-2 * t + 2, 2) / 2
+        return 1 - ((-2 * t + 2) ^ 2) / 2
     end
 end
 
 function utils.createColor(r, g, b, a)
     a = a or 1
-    return {r, g, b, a}
+    return { r, g, b, a }
 end
 
 function utils.shallowCopy(original)

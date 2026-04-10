@@ -3,8 +3,10 @@ local blinkTimer = 0
 local config = require("src.config")
 local locales = require("src.locales")
 local uiButton = require("src.ui.ui")
+local switchStateCallback = nil
 
-function load()
+function load(switchState)
+    switchStateCallback = switchState
     titleImage = love.graphics.newImage("src/img/title/title.png")
     promptFont = uiButton.getFont("small")
 end
@@ -22,8 +24,8 @@ function draw()
     local targetWidth = w * 0.5
     local scale = targetWidth / originalWidth
     local phase = (blinkTimer / 3.2) * 2 * math.pi
-    local alpha = (math.sin(phase - math.pi/2) + 1) / 2
-    local promptColor = {table.unpack(config.colors.prompt)}; promptColor[4] = alpha
+    local alpha = (math.sin(phase - math.pi / 2) + 1) / 2
+    local promptColor = { table.unpack(config.colors.prompt) }; promptColor[4] = alpha
     local promptText = locales.get("title", "prompt")
     local promptWidth = promptFont:getWidth(promptText)
 
@@ -37,14 +39,16 @@ end
 
 function keypressed(key)
     if key == "space" then
-        local main = require("main")
-        main.switchState("home")
+        if switchStateCallback then
+            switchStateCallback("home")
+        end
     end
 end
 
 function mousepressed(x, y, button)
-    local main = require("main")
-    main.switchState("home")
+    if switchStateCallback then
+        switchStateCallback("home")
+    end
 end
 
 return {

@@ -18,13 +18,13 @@ end
 function button.draw(btn, x, y)
     local halfSize = btn.size / 2
     local radius = 4
-    
+
     love.graphics.setColor(table.unpack(btn.color))
     love.graphics.rectangle("fill", x - halfSize, y - halfSize, btn.size, btn.size, radius)
     love.graphics.setColor(1, 1, 1, 1)
     love.graphics.setLineWidth(4)
     love.graphics.rectangle("line", x - halfSize, y - halfSize, btn.size, btn.size, radius)
-    
+
     if btn.icon and btn.iconImage then
         local iconSize = btn.size
         local scale = iconSize / math.max(btn.iconImage:getWidth(), btn.iconImage:getHeight())
@@ -38,7 +38,7 @@ function button.draw(btn, x, y)
             btn.iconImage:getHeight() / 2
         )
     end
-    
+
     return x, y
 end
 
@@ -52,13 +52,12 @@ end
 function button.isClicked(btn, x, y, buttonX, buttonY)
     local halfSize = btn.size / 2
     return x >= buttonX - halfSize and x <= buttonX + halfSize and
-           y >= buttonY - halfSize and y <= buttonY + halfSize
+        y >= buttonY - halfSize and y <= buttonY + halfSize
 end
 
 function button.isHovered(btn, x, y, buttonX, buttonY)
     return button.isClicked(btn, x, y, buttonX, buttonY)
 end
-
 
 function button.initTooltipFont(fontPath, fontSize)
     if not tooltipFont then
@@ -70,7 +69,7 @@ function button.drawTooltip(btn, mouseX, mouseY)
     if not tooltipFont then
         return
     end
-    
+
     local padding = 8
     local text = btn.tip or btn.name or ""
     local textWidth = tooltipFont:getWidth(text)
@@ -103,7 +102,7 @@ function button.reloadFonts()
     local locales = require("src.locales")
     local config = require("src.config")
     local fontPath = locales.getFontPath()
-    
+
     -- print("reloadFonts")
     tooltipFont = love.graphics.newFont(fontPath, config.fonts.sizes.small)
 end
@@ -112,7 +111,7 @@ function button.getFont(sizeName)
     local locales = require("src.locales")
     local config = require("src.config")
     local fontPath = locales.getFontPath()
-    
+
     local size = config.fonts.sizes[sizeName]
     return love.graphics.newFont(fontPath, size)
 end

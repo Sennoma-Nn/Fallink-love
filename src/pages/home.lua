@@ -1,6 +1,9 @@
 local config = require("src.config")
 local locales = require("src.locales")
 local uiButton = require("src.ui.ui")
+local utils = require("src.utils")
+
+local switchStateCallback = nil
 local cameraX = 0
 local cameraY = 0
 local zoom = 1.0
@@ -27,7 +30,7 @@ local buttons = {
         id = 1,
         x = 0,
         y = 0,
-        size = LEVEL_BUTTON_SIZE;
+        size = LEVEL_BUTTON_SIZE,
         name = "Test Level - 1",
         description = "Test",
         icon = "test_icon",
@@ -40,7 +43,7 @@ local buttons = {
         id = 2,
         x = 360,
         y = 0,
-        size = LEVEL_BUTTON_SIZE;
+        size = LEVEL_BUTTON_SIZE,
         name = "Test Level - 2",
         description = "Test",
         icon = "test_icon",
@@ -55,7 +58,7 @@ local buttons = {
         id = 3,
         x = 360 * 2,
         y = -180,
-        size = LEVEL_BUTTON_SIZE;
+        size = LEVEL_BUTTON_SIZE,
         name = "Test Level - 3",
         description = "Test",
         icon = "test_icon",
@@ -69,7 +72,7 @@ local buttons = {
         id = 3.1,
         x = 360 * 3,
         y = -180,
-        size = LEVEL_BUTTON_SIZE;
+        size = LEVEL_BUTTON_SIZE,
         name = "Test Level - 3.1",
         description = "Test",
         icon = "test_icon",
@@ -82,7 +85,7 @@ local buttons = {
         id = 4,
         x = 360 * 2,
         y = 180,
-        size = LEVEL_BUTTON_SIZE;
+        size = LEVEL_BUTTON_SIZE,
         name = "Test Level - 4",
         description = "Test",
         icon = "test_icon",
@@ -96,7 +99,7 @@ local buttons = {
         id = 4.1,
         x = 360 * 3,
         y = 180,
-        size = LEVEL_BUTTON_SIZE;
+        size = LEVEL_BUTTON_SIZE,
         name = "Test Level - 4.1",
         description = "Test",
         icon = "test_icon",
@@ -110,7 +113,7 @@ local buttons = {
         id = 5,
         x = 360 * 4,
         y = 0,
-        size = LEVEL_BUTTON_SIZE;
+        size = LEVEL_BUTTON_SIZE,
         name = "Test Level - 5",
         description = "Test",
         icon = "test_icon",
@@ -133,10 +136,6 @@ local dragStartX = 0
 local dragStartY = 0
 local dragThreshold = 12
 
-local function easeOutQuad(t)
-    return 1 - (1 - t) * (1 - t)
-end
-
 local ANIMATION_DURATION = 0.3
 local OVERLAY_MAX_ALPHA = 0.4
 
@@ -146,7 +145,7 @@ local function updatePanelAnimation(dt)
         local closeProgress = math.min(closeAnimationTime / ANIMATION_DURATION, 1)
 
         if closeProgress < 1 then
-            local easedCloseProgress = easeOutQuad(closeProgress)
+            local easedCloseProgress = utils.easeOutQuad(closeProgress)
             local screenHeight = love.graphics.getHeight()
             local startY = TOP_BAR_HEIGHT + 16
             panelY = startY + (screenHeight - startY) * easedCloseProgress
@@ -162,7 +161,7 @@ local function updatePanelAnimation(dt)
         animationTime = animationTime + dt
         local progress = math.min(animationTime / ANIMATION_DURATION, 1)
         if progress < 1 then
-            local easedProgress = easeOutQuad(progress)
+            local easedProgress = utils.easeOutQuad(progress)
             local screenHeight = love.graphics.getHeight()
             local targetY = TOP_BAR_HEIGHT + 16
             overlayAlpha = OVERLAY_MAX_ALPHA * easedProgress
@@ -186,7 +185,8 @@ local function reloadFonts()
     settingsButton.tip = locales.get("tips", "settings")
 end
 
-function load()
+function load(switchState)
+    switchStateCallback = switchState
     cameraX = 0
     cameraY = 0
     zoom = 1.0
@@ -200,24 +200,24 @@ function load()
             button.iconImage = love.graphics.newImage(iconPath)
         end
     end
-    
+
     uiButton.reloadFonts()
-    
+
     local closeIconPath = "src/img/icon/X.png"
     local file = love.filesystem.getInfo(closeIconPath)
     if file then
         closeIcon = love.graphics.newImage(closeIconPath)
     end
-    
+
     if languageChangeCallback then
         locales.removeLanguageChangeCallback(languageChangeCallback)
     end
-    
+
     languageChangeCallback = function(langCode)
         -- print("222 " .. langCode)
         reloadFonts()
     end
-    
+
     locales.addLanguageChangeCallback(languageChangeCallback)
 end
 
@@ -301,14 +301,14 @@ function mousepressed(x, y, button)
             local buttonSize = 32
             local closeButtonX = panelX + panelWidth - 16 - buttonSize
             local closeButtonY = panelY + 16
-            
+
             if x >= closeButtonX and x <= closeButtonX + buttonSize and
                 y >= closeButtonY and y <= closeButtonY + buttonSize then
                 isClosing = true
                 closeAnimationTime = 0
                 return
             end
-            
+
             local isClickOnPanel = x >= panelX and x <= panelX + panelWidth and y >= panelY and y <= panelY + panelHeight
 
             if isClickOnPanel then
@@ -353,7 +353,7 @@ function mousemoved(x, y, dx, dy)
             local buttonSize = 32
             local closeButtonX = panelX + panelWidth - 16 - buttonSize
             local closeButtonY = panelY + 16
-            
+
             if x >= closeButtonX and x <= closeButtonX + buttonSize and
                 y >= closeButtonY and y <= closeButtonY + buttonSize then
                 love.mouse.setCursor(love.mouse.getSystemCursor("hand"))
@@ -392,7 +392,7 @@ function mousemoved(x, y, dx, dy)
                     break
                 end
             end
-            
+
             if not hoveredButton then
                 love.mouse.setCursor()
             end
@@ -421,8 +421,9 @@ function mousereleased(x, y, button)
             local buttonX, buttonY = uiButton.calcRightPosition(button, love.graphics.getWidth(), TOP_BAR_HEIGHT)
 
             if uiButton.isClicked(button, x, y, buttonX, buttonY) then
-                local main = require("main")
-                main.switchState("settings")
+                if switchStateCallback then
+                    switchStateCallback("settings")
+                end
                 return
             end
 
@@ -452,7 +453,7 @@ function checkButtonClick(worldX, worldY)
     if isPanelVisible or isClosing then
         return false
     end
-    
+
     for _, button in ipairs(buttons) do
         local halfSize = button.size / 2
 
@@ -651,7 +652,7 @@ function drawCloseButton(panelX, panelY, panelWidth)
     local buttonSize = 32
     local buttonX = panelX + panelWidth - 16 - buttonSize
     local buttonY = panelY + 16
-    
+
     if closeIcon then
         local scale = buttonSize / math.max(closeIcon:getWidth(), closeIcon:getHeight())
         love.graphics.setColor(1, 1, 1, 1)
