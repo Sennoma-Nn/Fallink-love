@@ -1,4 +1,4 @@
-local currentState = "title"
+local currentState = nil
 local nextState = nil
 local transitionTimer = 0
 local transitionPhase = "none" -- "none" / "fade_in" / "fade_out"
@@ -20,6 +20,7 @@ function love.load()
     titlePage.load(switchState)
     homePage.load(switchState)
     settingsPage.load(switchState)
+    currentState = "title"
 end
 
 function love.update(dt)
