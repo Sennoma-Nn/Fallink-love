@@ -208,7 +208,7 @@ function load(switchState)
     end
 
     reloadFonts()
-    
+
     locales.addLanguageChangeCallback("home_page", function(langCode)
         reloadFonts()
     end)
@@ -301,6 +301,7 @@ function mousepressed(x, y, button)
                 y >= closeButtonY and y <= closeButtonY + buttonSize then
                 isClosing = true
                 closeAnimationTime = 0
+                love.mouse.setCursor()
                 return
             end
 
@@ -416,6 +417,7 @@ function mousereleased(x, y, button)
             local buttonX, buttonY = uiButton.calcRightPosition(button, love.graphics.getWidth(), TOP_BAR_HEIGHT)
 
             if uiButton.isClicked(button, x, y, buttonX, buttonY) then
+                love.mouse.setCursor()
                 if switchStateCallback then
                     switchStateCallback("settings")
                 end
@@ -463,6 +465,7 @@ function checkButtonClick(worldX, worldY)
             animationTime = 0
             overlayAlpha = 0
             panelY = screenHeight
+            love.mouse.setCursor()
 
             return true
         end

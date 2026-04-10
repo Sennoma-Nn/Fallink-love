@@ -17,22 +17,26 @@ local texts = {
         en = {
             settings = "Game settings",
             map = "Return to game levels",
-            language = "Language"
+            language = "Language",
+            language_tip = "Change game display language"
         },
         zh_cn = {
             settings = "游戏设置",
             map = "返回游戏关卡",
-            language = "语言"
+            language = "语言",
+            language_tip = "更改游戏显示语言"
         },
         zh_tw = {
-            settings = "遊戲設定",
-            map = "返回遊戲關卡",
-            language = "語言"
+            settings = "游戏设定",
+            map = "返回游戏关卡",
+            language = "语言",
+            language_tip = "更改遊戲顯示語言"
         },
         jp = {
             settings = "ゲーム設定",
             map = "ゲームレベルに戻る",
-            language = "言語"
+            language = "言語",
+            language_tip = "ゲーム表示言語を変更"
         },
     },
     levels = {

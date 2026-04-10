@@ -33,7 +33,8 @@ local languageSelector = {
         width = 40,
         height = 40
     },
-    currentLanguage = locales.getCurrentLanguage()
+    currentLanguage = locales.getCurrentLanguage(),
+    tip = function() return locales.get("tips", "language_tip") end
 }
 
 local languageFont = nil
@@ -84,6 +85,7 @@ end
 
 function keypressed(key)
     if key == "escape" then
+        love.mouse.setCursor()
         if switchStateCallback then
             switchStateCallback("home")
         end
@@ -98,6 +100,7 @@ function mousepressed(x, y, button)
 
         if uiButton.isClicked(mapButton, x, y, buttonX, buttonY) then
             hoveredButton = nil
+            love.mouse.setCursor() -- 重置光标
             if switchStateCallback then
                 switchStateCallback("home")
             end
@@ -133,7 +136,17 @@ function mousemoved(x, y, dx, dy)
         hoveredButton = mapButton
         love.mouse.setCursor(love.mouse.getSystemCursor("hand"))
     elseif languageSelector.width then
-        if utils.isPointInRect(x, y, languageSelector.leftArrow) or
+        local selectorRect = {
+            x = languageSelector.x,
+            y = languageSelector.y,
+            width = languageSelector.width,
+            height = languageSelector.height
+        }
+
+        if utils.isPointInRect(x, y, selectorRect) then
+            hoveredButton = languageSelector
+            love.mouse.setCursor(love.mouse.getSystemCursor("hand"))
+        elseif utils.isPointInRect(x, y, languageSelector.leftArrow) or
             utils.isPointInRect(x, y, languageSelector.rightArrow) then
             love.mouse.setCursor(love.mouse.getSystemCursor("hand"))
             hoveredButton = nil
