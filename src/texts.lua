@@ -41,24 +41,28 @@ local texts = {
     },
     levels = {
         en = {
+            start = "Let's GO!",
             test_level = {
                 name = "Test Level",
                 description = "The Test",
             }
         },
         zh_cn = {
+            start = "游戏开始！",
             test_level = {
                 name = "测试关卡",
                 description = "测试",
             }
         },
         zh_tw = {
+            start = "游戏開始！",
             test_level = {
                 name = "測試關卡",
                 description = "測試",
             }
         },
         jp = {
+            start = "スタート！",
             test_level = {
                 name = "テストレベル",
                 description = "テストだ",

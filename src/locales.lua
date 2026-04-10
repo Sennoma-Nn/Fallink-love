@@ -12,9 +12,9 @@ Locales.texts = require("src.texts")
 
 Locales.fonts = {
     en = "src/font/Montserrat-Regular.otf",
-    zh_cn = "src/font/SarasaGothicSC-Regular.ttf",
-    zh_tw = "src/font/SarasaGothicTC-Regular.ttf",
-    jp = "src/font/SarasaGothicJ-Regular.ttf"
+    zh_cn = "src/font/SarasaGothicSC-SemiBold.ttf",
+    zh_tw = "src/font/SarasaGothicTC-SemiBold.ttf",
+    jp = "src/font/SarasaGothicJ-SemiBold.ttf"
 }
 
 function Locales.get(category, key)

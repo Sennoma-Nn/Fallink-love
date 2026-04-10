@@ -12,6 +12,7 @@ local isDragging = false
 local hoveredButton = nil
 local panelTitleFont = nil
 local panelDescFont = nil
+local startIconFont = nil
 local closeIcon = nil
 local selectedButton = nil
 local overlayAlpha = 0
@@ -191,6 +192,7 @@ local function reloadFonts()
     uiButton.clearCache()
     panelTitleFont = uiButton.getFont("large")
     panelDescFont = uiButton.getFont("small")
+    startIconFont = love.graphics.newFont("src/font/SymbolsNerdFontMono-Regular.ttf", 32)
 end
 
 function load(switchState)
@@ -300,16 +302,30 @@ function mousepressed(x, y, button)
             local screenHeight = love.graphics.getHeight()
             local panelWidth = screenWidth - 32
             local panelHeight = screenHeight
-            local panelX = (screenWidth - panelWidth) / 2
+            local panelX = 16
             local buttonSize = 32
             local closeButtonX = panelX + panelWidth - 16 - buttonSize
             local closeButtonY = panelY + 16
 
-            if x >= closeButtonX and x <= closeButtonX + buttonSize and
-                y >= closeButtonY and y <= closeButtonY + buttonSize then
+            local closeButtonRect = {
+                x = closeButtonX,
+                y = closeButtonY,
+                width = buttonSize,
+                height = buttonSize
+            }
+            if utils.isPointInRect(x, y, closeButtonRect) then
                 isClosing = true
                 closeAnimationTime = 0
                 love.mouse.setCursor()
+                return
+            end
+            
+            local startButtonRect = getStartButtonRect(panelX, panelY, panelWidth, panelHeight)
+            if utils.isPointInRect(x, y, startButtonRect) then
+                love.mouse.setCursor()
+                if switchStateCallback then
+                    switchStateCallback("game")
+                end
                 return
             end
 
@@ -353,17 +369,29 @@ function mousemoved(x, y, dx, dy)
             local screenHeight = love.graphics.getHeight()
             local panelWidth = screenWidth - 32
             local panelHeight = screenHeight
-            local panelX = (screenWidth - panelWidth) / 2
+            local panelX = 16
             local buttonSize = 32
             local closeButtonX = panelX + panelWidth - 16 - buttonSize
             local closeButtonY = panelY + 16
 
-            if x >= closeButtonX and x <= closeButtonX + buttonSize and
-                y >= closeButtonY and y <= closeButtonY + buttonSize then
+            local closeButtonRect = {
+                x = closeButtonX,
+                y = closeButtonY,
+                width = buttonSize,
+                height = buttonSize
+            }
+            if utils.isPointInRect(x, y, closeButtonRect) then
                 love.mouse.setCursor(love.mouse.getSystemCursor("hand"))
-            else
-                love.mouse.setCursor()
+                return
             end
+            
+            local startButtonRect = getStartButtonRect(panelX, panelY, panelWidth, panelHeight)
+            if utils.isPointInRect(x, y, startButtonRect) then
+                love.mouse.setCursor(love.mouse.getSystemCursor("hand"))
+                return
+            end
+            
+            love.mouse.setCursor()
         else
             love.mouse.setCursor()
         end
@@ -459,7 +487,7 @@ function checkButtonClick(worldX, worldY)
         local halfSize = button.size / 2
         if worldX >= button.x - halfSize and worldX <= button.x + halfSize and
             worldY >= button.y - halfSize and worldY <= button.y + halfSize then
-            -- print("点击按钮: " .. button.name)
+            -- print("21211221: " .. button.name)
             if button.showPanel then
                 local screenHeight = love.graphics.getHeight()
 
@@ -606,7 +634,7 @@ function drawPanel()
     local screenHeight = love.graphics.getHeight()
     local panelWidth = screenWidth - 32
     local panelHeight = screenHeight
-    local panelX = (screenWidth - panelWidth) / 2
+    local panelX = 16
 
     love.graphics.setColor(0, 0, 0, overlayAlpha)
     love.graphics.rectangle("fill", 0, 0, screenWidth, screenHeight)
@@ -640,6 +668,51 @@ function drawPanelContent(button, panelX, panelY, panelWidth, panelHeight)
     love.graphics.setColor(table.unpack(config.colors.panel_desc))
     love.graphics.setFont(panelDescFont)
     love.graphics.printf(buttonDescription, contentX, currentY, contentWidth, "left")
+
+    drawStartButton(panelX, panelY, panelWidth, panelHeight)
+end
+
+function getStartButtonRect(panelX, panelY, panelWidth, panelHeight)
+    local buttonWidth = 60 * 4
+    local buttonHeight = 60
+    local buttonX = panelX + panelWidth / 2
+    local buttonY = panelY + panelHeight - TOP_BAR_HEIGHT - 16 - buttonHeight / 2 - 32
+    
+    return {
+        x = buttonX - buttonWidth / 2,
+        y = buttonY - buttonHeight / 2,
+        width = buttonWidth,
+        height = buttonHeight
+    }
+end
+
+function drawStartButton(panelX, panelY, panelWidth, panelHeight)
+    local rect = getStartButtonRect(panelX, panelY, panelWidth, panelHeight)
+    local buttonX = rect.x + rect.width / 2
+    local buttonY = rect.y + rect.height / 2
+
+    love.graphics.setColor(1, 1, 1, 1)
+    love.graphics.rectangle("fill", rect.x, rect.y, rect.width, rect.height, 8)
+    love.graphics.setColor(1, 1, 1, 1)
+    love.graphics.setLineWidth(2)
+    love.graphics.rectangle("line", rect.x, rect.y, rect.width, rect.height, 8)
+
+    local startText = function() return locales.get("levels", "start") end
+    local startTextFont = uiButton.getFont("medium")
+    local normalText = utils.getValue(startText)
+    local normalTextWidth = startTextFont:getWidth(normalText)
+    local startSymbol = ""
+    local symbolWidth = startIconFont:getWidth(startSymbol)
+    local totalWidth = symbolWidth + 8 + normalTextWidth
+    local startX = buttonX - totalWidth / 2
+    local textY = buttonY - startTextFont:getHeight() / 2
+    local startTextYOffset = locales.getCurrentLanguage() == "en" and 0 or 2 -- CJK vertical alignment fix
+
+    love.graphics.setColor(0, 0, 0, 1)
+    love.graphics.setFont(startIconFont)
+    love.graphics.print(startSymbol, startX, textY + 4)
+    love.graphics.setFont(startTextFont)
+    love.graphics.print(normalText, startX + symbolWidth + 8, textY + startTextYOffset)
 end
 
 function drawTopBar(screenWidth, screenHeight)
