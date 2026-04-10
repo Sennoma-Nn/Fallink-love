@@ -6,6 +6,11 @@ local TOOLTIP_BORDER_COLOR = { 0.3, 0.3, 0.3, 1 }
 local TOOLTIP_TEXT_COLOR = { 1, 1, 1, 1 }
 
 local tooltipFont = nil
+local panelTitleFont = nil
+local panelDescFont = nil
+local languageFont = nil
+local arrowFont = nil
+local promptFont = nil
 
 function button.preloadIcon(btn)
     if btn.icon and not btn.iconImage then
@@ -110,6 +115,32 @@ function button.drawTooltip(btn, mouseX, mouseY)
     love.graphics.setColor(table.unpack(textColor))
     love.graphics.setFont(tooltipFont)
     love.graphics.print(text, bubbleX + padding, bubbleY + padding)
+end
+
+function button.reloadFonts()
+    local locales = require("src.locales")
+    local config = require("src.config")
+    local fontPath = locales.getFontPath()
+    
+    print("reloadFonts")
+    tooltipFont = love.graphics.newFont(fontPath, config.fonts.sizes.small)
+end
+
+function button.getFont(sizeName)
+    local locales = require("src.locales")
+    local config = require("src.config")
+    local fontPath = locales.getFontPath()
+    
+    local size = config.fonts.sizes[sizeName]
+    return love.graphics.newFont(fontPath, size)
+end
+
+function button.getTooltipFont()
+    return tooltipFont
+end
+
+function button.initTooltipFont(fontPath, fontSize)
+    tooltipFont = love.graphics.newFont(fontPath, fontSize)
 end
 
 return button

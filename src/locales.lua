@@ -27,25 +27,29 @@ Locales.texts = {
     tips = {
         en = {
             settings = "Game settings",
-            map = "Return to game levels"
+            map = "Return to game levels",
+            language = "Language"
         },
         zh_cn = {
             settings = "游戏设置",
-            map = "返回游戏关卡"
+            map = "返回游戏关卡",
+            language = "语言"
         },
         zh_tw = {
             settings = "遊戲設定",
-            map = "返回遊戲關卡"
+            map = "返回遊戲關卡",
+            language = "語言"
         },
         jp = {
             settings = "ゲーム設定",
-            map = "ゲームレベルに戻る"
+            map = "ゲームレベルに戻る",
+            language = "言語"
         },
     },
 }
 
 Locales.fonts = {
-    en = "src/font/SarasaGothicSC-Regular.ttf",
+    en = "src/font/Montserrat-Regular.otf",
     zh_cn = "src/font/SarasaGothicSC-Regular.ttf",
     zh_tw = "src/font/SarasaGothicTC-Regular.ttf",
     jp = "src/font/SarasaGothicJ-Regular.ttf"
@@ -53,10 +57,7 @@ Locales.fonts = {
 
 function Locales.get(category, key)
     local lang = Locales.current
-    if Locales.texts[category] and Locales.texts[category][lang] then
-        return Locales.texts[category][lang][key] or key
-    end
-    return key
+    return Locales.texts[category][lang][key]
 end
 
 function Locales.getFontPath()
@@ -69,6 +70,77 @@ end
 
 function Locales.getSupportedLanguages()
     return Locales.languages
+end
+
+function Locales.setLanguage(langCode)
+    Locales.current = langCode
+end
+
+function Locales.getLanguageName(langCode)
+    return Locales.languages[langCode]
+end
+
+function Locales.getLanguageCodes()
+    local codes = {}
+    for code, _ in pairs(Locales.languages) do
+        table.insert(codes, code)
+    end
+    return codes
+end
+
+function Locales.getNextLanguage()
+    local codes = Locales.getLanguageCodes()
+    local currentIndex = 1
+    for i, code in ipairs(codes) do
+        if code == Locales.current then
+            currentIndex = i
+            break
+        end
+    end
+    local nextIndex = (currentIndex % #codes) + 1
+    return codes[nextIndex]
+end
+
+function Locales.getPrevLanguage()
+    local codes = Locales.getLanguageCodes()
+    local currentIndex = 1
+    for i, code in ipairs(codes) do
+        if code == Locales.current then
+            currentIndex = i
+            break
+        end
+    end
+    local prevIndex = ((currentIndex - 2) % #codes) + 1
+    return codes[prevIndex]
+end
+
+local languageChangeCallbacks = {}
+
+function Locales.addLanguageChangeCallback(callback)
+    table.insert(languageChangeCallbacks, callback)
+end
+
+function Locales.removeLanguageChangeCallback(callback)
+    for i, cb in ipairs(languageChangeCallbacks) do
+        if cb == callback then
+            table.remove(languageChangeCallbacks, i)
+            return true
+        end
+    end
+    return false
+end
+
+function Locales.notifyLanguageChange()
+    for _, callback in ipairs(languageChangeCallbacks) do
+        callback(Locales.current)
+    end
+end
+
+local originalSetLanguage = Locales.setLanguage
+function Locales.setLanguage(langCode)
+    print("Locales.setLanguage " .. langCode)
+    originalSetLanguage(langCode)
+    Locales.notifyLanguageChange()
 end
 
 return Locales

@@ -1,29 +1,66 @@
 local config = require("src.config")
 local locales = require("src.locales")
-local uiButton = require("src.ui.button")
+local uiButton = require("src.ui.ui")
 
 local TOP_BAR_HEIGHT = 92
-local TOP_BAR_COLOR = { 39 / 255, 39 / 255, 39 / 255, 1 }
-local TEXT_COLOR = { 1, 1, 1, 1 }
-local BUTTON_COLOR = { 1, 1, 1, 0.2 }
 
 local mapButton = {
     id = "map",
     size = 60,
     icon = "map",
-    color = BUTTON_COLOR,
+    color = config.colors.button,
     tip = locales.get("tips", "map"),
 }
 
 local hoveredButton = nil
 
+local languageSelector = {
+    x = 16,
+    y = TOP_BAR_HEIGHT + 16,
+    width = nil,
+    height = 60,
+    leftArrow = {
+        x = 0,
+        y = 0,
+        width = 40,
+        height = 40
+    },
+    rightArrow = {
+        x = 0,
+        y = 0,
+        width = 40,
+        height = 40
+    },
+    currentLanguage = locales.getCurrentLanguage()
+}
+
+local languageFont = nil
+local arrowFont = nil
+local languageChangeCallback = nil
+
+local function reloadFonts()
+    languageFont = uiButton.getFont("small")
+    arrowFont = love.graphics.newFont("src/font/SymbolsNerdFontMono-Regular.ttf", 32)
+    
+    mapButton.tip = locales.get("tips", "map")
+end
+
 function load()
     uiButton.preloadIcon(mapButton)
     
-    local fontPath = locales.getFontPath()
-    local config = require("src.config")
-    local tooltipFontSize = config.fonts.sizes.small
-    uiButton.initTooltipFont(fontPath, tooltipFontSize)
+    reloadFonts()
+    languageSelector.currentLanguage = locales.getCurrentLanguage()
+    
+    if languageChangeCallback then
+        locales.removeLanguageChangeCallback(languageChangeCallback)
+    end
+    
+    languageChangeCallback = function(langCode)
+        reloadFonts()
+        languageSelector.currentLanguage = locales.getCurrentLanguage()
+    end
+    
+    locales.addLanguageChangeCallback(languageChangeCallback)
 end
 
 function update(dt)
@@ -34,10 +71,11 @@ function draw()
     local screenHeight = love.graphics.getHeight()
 
     love.graphics.clear(table.unpack(config.colors.background))
-    love.graphics.setColor(table.unpack(TOP_BAR_COLOR))
+    love.graphics.setColor(table.unpack(config.colors.top_bar))
     love.graphics.rectangle("fill", 0, 0, screenWidth, TOP_BAR_HEIGHT)
     
     drawMapButton(screenWidth, screenHeight)
+    drawLanguageSelector(screenWidth, screenHeight)
     
     if hoveredButton then
         local mouseX, mouseY = love.mouse.getPosition()
@@ -68,6 +106,26 @@ function mousepressed(x, y, button)
             main.switchState("home")
             return
         end
+        
+        if languageSelector.width then
+            if isPointInRect(x, y, languageSelector.leftArrow) then
+                local prevLang = locales.getPrevLanguage()
+                locales.setLanguage(prevLang)
+                languageSelector.currentLanguage = prevLang
+                uiButton.reloadFonts()
+                reloadFonts()
+                return
+            end
+            
+            if isPointInRect(x, y, languageSelector.rightArrow) then
+                local nextLang = locales.getNextLanguage()
+                locales.setLanguage(nextLang)
+                languageSelector.currentLanguage = nextLang
+                uiButton.reloadFonts()
+                reloadFonts()
+                return
+            end
+        end
     end
 end
 
@@ -79,6 +137,15 @@ function mousemoved(x, y, dx, dy)
     if uiButton.isHovered(mapButton, x, y, buttonX, buttonY) then
         hoveredButton = mapButton
         love.mouse.setCursor(love.mouse.getSystemCursor("hand"))
+    elseif languageSelector.width then
+        if isPointInRect(x, y, languageSelector.leftArrow) or 
+           isPointInRect(x, y, languageSelector.rightArrow) then
+            love.mouse.setCursor(love.mouse.getSystemCursor("hand"))
+            hoveredButton = nil
+        else
+            hoveredButton = nil
+            love.mouse.setCursor()
+        end
     else
         hoveredButton = nil
         love.mouse.setCursor()
@@ -89,6 +156,54 @@ function mousereleased(x, y, button)
 end
 
 function wheelmoved(x, y)
+end
+
+function drawLanguageSelector(screenWidth, screenHeight)
+    languageSelector.width = screenWidth - 32
+    
+    local selector = languageSelector
+    local x = selector.x
+    local y = selector.y
+    local width = selector.width
+    local height = selector.height
+    
+    love.graphics.setColor(0.1, 0.1, 0.1, 0.8)
+    love.graphics.rectangle("fill", x, y, width, height, 8)
+    love.graphics.setColor(0.3, 0.3, 0.3, 1)
+    love.graphics.setLineWidth(2)
+    love.graphics.rectangle("line", x, y, width, height, 8)
+    
+    local padding = 16
+    local arrowWidth = 40
+    local arrowHeight = 40
+    local languageText = locales.get("tips", "language")
+    local languageTextWidth = languageFont:getWidth(languageText)
+    
+    love.graphics.setColor(table.unpack(config.colors.text))
+    love.graphics.setFont(languageFont)
+    love.graphics.print(languageText, x + padding, y + (height - languageFont:getHeight()) / 2)
+    
+    local currentLangName = locales.getLanguageName(selector.currentLanguage)
+    local langTextWidth = languageFont:getWidth(currentLangName)
+    local totalWidth = arrowWidth + 10 + langTextWidth + 10 + arrowWidth
+    local rightAreaX = x + width - padding - totalWidth
+    local languageTextX = rightAreaX + arrowWidth + 10
+    
+    selector.leftArrow.x = rightAreaX
+    selector.leftArrow.y = y + (height - arrowHeight) / 2
+    selector.rightArrow.x = languageTextX + langTextWidth + 10
+    selector.rightArrow.y = y + (height - arrowHeight) / 2
+    
+    love.graphics.print(currentLangName, languageTextX, y + (height - languageFont:getHeight()) / 2)
+    love.graphics.setFont(arrowFont)
+    love.graphics.setColor(1, 1, 1, 1)
+    love.graphics.print("", selector.leftArrow.x + (arrowWidth - arrowFont:getWidth("")) / 2,  selector.leftArrow.y + (arrowHeight - arrowFont:getHeight()) / 2)
+    love.graphics.print("", selector.rightArrow.x + (arrowWidth - arrowFont:getWidth("")) / 2,  selector.rightArrow.y + (arrowHeight - arrowFont:getHeight()) / 2)
+end
+
+function isPointInRect(x, y, rect)
+    return x >= rect.x and x <= rect.x + rect.width and
+           y >= rect.y and y <= rect.y + rect.height
 end
 
 return {

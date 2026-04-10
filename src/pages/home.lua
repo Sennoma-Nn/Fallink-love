@@ -1,6 +1,6 @@
 local config = require("src.config")
 local locales = require("src.locales")
-local uiButton = require("src.ui.button")
+local uiButton = require("src.ui.ui")
 local cameraX = 0
 local cameraY = 0
 local zoom = 1.0
@@ -20,26 +20,18 @@ local isClosing = false
 local closeAnimationTime = 0
 
 local TOP_BAR_HEIGHT = 92
-local TOP_BAR_COLOR = { 39 / 255, 39 / 255, 39 / 255, 1 }
-local PANEL_BG_COLOR = { 0.1, 0.1, 0.1, 0.95 }
-local PANEL_BORDER_COLOR = { 0.3, 0.3, 0.3, 0.95 }
-local TOOLTIP_BG_COLOR = { 0.1, 0.1, 0.1, 0.95 }
-local TOOLTIP_BORDER_COLOR = { 0.3, 0.3, 0.3, 1 }
-local TOOLTIP_TEXT_COLOR = { 1, 1, 1, 1 }
-local PANEL_TITLE_COLOR = { 0.9, 0.9, 0.9, 1 }
-local PANEL_DESC_COLOR = { 0.8, 0.8, 0.8, 1 }
-local BUTTON_COLOR = { 1, 1, 1, 0.2 }
+local LEVEL_BUTTON_SIZE = 80;
 
 local buttons = {
     {
         id = 1,
         x = 0,
         y = 0,
-        size = 80,
+        size = LEVEL_BUTTON_SIZE;
         name = "Test Level - 1",
         description = "Test",
         icon = "test_icon",
-        color = BUTTON_COLOR,
+        color = config.colors.button,
         link = {
             right = 2
         }
@@ -48,11 +40,11 @@ local buttons = {
         id = 2,
         x = 360,
         y = 0,
-        size = 80,
+        size = LEVEL_BUTTON_SIZE;
         name = "Test Level - 2",
         description = "Test",
         icon = "test_icon",
-        color = BUTTON_COLOR,
+        color = config.colors.button,
         link = {
             left = 1,
             top = 3,
@@ -63,11 +55,11 @@ local buttons = {
         id = 3,
         x = 360 * 2,
         y = -180,
-        size = 80,
+        size = LEVEL_BUTTON_SIZE;
         name = "Test Level - 3",
         description = "Test",
         icon = "test_icon",
-        color = BUTTON_COLOR,
+        color = config.colors.button,
         link = {
             left = 2,
             right = 3.1
@@ -77,11 +69,11 @@ local buttons = {
         id = 3.1,
         x = 360 * 3,
         y = -180,
-        size = 80,
+        size = LEVEL_BUTTON_SIZE;
         name = "Test Level - 3.1",
         description = "Test",
         icon = "test_icon",
-        color = BUTTON_COLOR,
+        color = config.colors.button,
         link = {
             left = 3
         }
@@ -90,11 +82,11 @@ local buttons = {
         id = 4,
         x = 360 * 2,
         y = 180,
-        size = 80,
+        size = LEVEL_BUTTON_SIZE;
         name = "Test Level - 4",
         description = "Test",
         icon = "test_icon",
-        color = BUTTON_COLOR,
+        color = config.colors.button,
         link = {
             left = 2,
             right = 4.1
@@ -104,11 +96,11 @@ local buttons = {
         id = 4.1,
         x = 360 * 3,
         y = 180,
-        size = 80,
+        size = LEVEL_BUTTON_SIZE;
         name = "Test Level - 4.1",
         description = "Test",
         icon = "test_icon",
-        color = BUTTON_COLOR,
+        color = config.colors.button,
         link = {
             left = 4,
             right = 5
@@ -118,11 +110,11 @@ local buttons = {
         id = 5,
         x = 360 * 4,
         y = 0,
-        size = 80,
+        size = LEVEL_BUTTON_SIZE;
         name = "Test Level - 5",
         description = "Test",
         icon = "test_icon",
-        color = BUTTON_COLOR,
+        color = config.colors.button,
         link = {
             bottom = 4.1
         }
@@ -133,7 +125,7 @@ local settingsButton = {
     id = "settings",
     size = 60,
     icon = "settings",
-    color = BUTTON_COLOR,
+    color = config.colors.button,
     tip = locales.get("tips", "settings"),
 }
 
@@ -185,6 +177,15 @@ local function updatePanelAnimation(dt)
     end
 end
 
+local languageChangeCallback = nil
+
+local function reloadFonts()
+    print("111 reloadFonts")
+    panelTitleFont = uiButton.getFont("large")
+    panelDescFont = uiButton.getFont("small")
+    settingsButton.tip = locales.get("tips", "settings")
+end
+
 function load()
     cameraX = 0
     cameraY = 0
@@ -200,20 +201,24 @@ function load()
         end
     end
     
-    local fontPath = locales.getFontPath()
-    local config = require("src.config")
-    
-    local tooltipFontSize = config.fonts.sizes.small
-    uiButton.initTooltipFont(fontPath, tooltipFontSize)
-    
-    panelTitleFont = love.graphics.newFont(fontPath, 36)
-    panelDescFont = love.graphics.newFont(fontPath, 24)
+    uiButton.reloadFonts()
     
     local closeIconPath = "src/img/icon/X.png"
     local file = love.filesystem.getInfo(closeIconPath)
     if file then
         closeIcon = love.graphics.newImage(closeIconPath)
     end
+    
+    if languageChangeCallback then
+        locales.removeLanguageChangeCallback(languageChangeCallback)
+    end
+    
+    languageChangeCallback = function(langCode)
+        print("222 " .. langCode)
+        reloadFonts()
+    end
+    
+    locales.addLanguageChangeCallback(languageChangeCallback)
 end
 
 function update(dt)
@@ -606,9 +611,9 @@ function drawPanel()
 
     love.graphics.setColor(0, 0, 0, overlayAlpha)
     love.graphics.rectangle("fill", 0, 0, screenWidth, screenHeight)
-    love.graphics.setColor(table.unpack(PANEL_BG_COLOR))
+    love.graphics.setColor(table.unpack(config.colors.panel_bg))
     love.graphics.rectangle("fill", panelX, panelY, panelWidth, panelHeight, 12)
-    love.graphics.setColor(table.unpack(PANEL_BORDER_COLOR))
+    love.graphics.setColor(table.unpack(config.colors.panel_border))
     love.graphics.setLineWidth(2)
     love.graphics.rectangle("line", panelX, panelY, panelWidth, panelHeight, 12)
 
@@ -628,16 +633,16 @@ function drawPanelContent(button, panelX, panelY, panelWidth, panelHeight)
     local titleHeight = panelTitleFont:getHeight()
     local currentY = contentY + titleHeight + 30
 
-    love.graphics.setColor(table.unpack(PANEL_TITLE_COLOR))
+    love.graphics.setColor(table.unpack(config.colors.panel_title))
     love.graphics.setFont(panelTitleFont)
     love.graphics.print(button.name, contentX, contentY)
-    love.graphics.setColor(table.unpack(PANEL_DESC_COLOR))
+    love.graphics.setColor(table.unpack(config.colors.panel_desc))
     love.graphics.setFont(panelDescFont)
     love.graphics.printf(button.description, contentX, currentY, contentWidth, "left")
 end
 
 function drawTopBar(screenWidth, screenHeight)
-    love.graphics.setColor(table.unpack(TOP_BAR_COLOR))
+    love.graphics.setColor(table.unpack(config.colors.top_bar))
     love.graphics.rectangle("fill", 0, 0, screenWidth, TOP_BAR_HEIGHT)
 end
 

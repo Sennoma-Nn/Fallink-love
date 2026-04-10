@@ -2,10 +2,11 @@ local titleImage, promptFont
 local blinkTimer = 0
 local config = require("src.config")
 local locales = require("src.locales")
+local uiButton = require("src.ui.ui")
 
 function load()
     titleImage = love.graphics.newImage("src/img/title/title.png")
-    promptFont = love.graphics.newFont(locales.getFontPath(), config.fonts.sizes.small)
+    promptFont = uiButton.getFont("small")
 end
 
 function update(dt)
