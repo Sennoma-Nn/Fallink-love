@@ -106,13 +106,13 @@ local BLOCK_SIZE = nil
 local BLOCK_WH = nil
 local switchStateCallback = nil
 
-local function drawBlock(value, x, y)
+local function drawBlock(value, x, y, imageIndex)
     love.graphics.setColor(1, 1, 1)
 
     if value == "V" then
-        love.graphics.draw(vImages[1], x, y, 0, BLOCK_WH, BLOCK_WH)
+        love.graphics.draw(vImages[imageIndex or 1], x, y, 0, BLOCK_WH, BLOCK_WH)
     elseif value == "H" then
-        love.graphics.draw(hImages[1], x, y, 0, BLOCK_WH, BLOCK_WH)
+        love.graphics.draw(hImages[imageIndex or 1], x, y, 0, BLOCK_WH, BLOCK_WH)
     end
 end
 
@@ -298,7 +298,20 @@ local function drawOperatingArea(operatingStartX, operatingStartY, operatingWidt
             local blockValue = operatingGroup[i][j]
             local blockX = operatingStartX + (j - 1) * BLOCK_SIZE
             local blockY = operatingStartY + (i - 1) * BLOCK_SIZE
-            drawBlock(blockValue, blockX, blockY)
+
+            local imageIndex = 1
+            if i == 1 then
+                imageIndex = 2
+            elseif i == 2 then
+                local otherJ = (j == 1) and 2 or 1
+                if blockValue == "H" and operatingGroup[2][otherJ] == "H" then
+                    imageIndex = 2
+                else
+                    imageIndex = 1
+                end
+            end
+
+            drawBlock(blockValue, blockX, blockY, imageIndex)
         end
     end
 
@@ -324,7 +337,20 @@ local function drawNextArea(nextStartX, nextStartY, nextWidth, nextHeight, borde
             local blockValue = nextGroup1[i][j]
             local blockX = nextStartX + (j - 1) * BLOCK_SIZE
             local blockY = topBoxStartY + (i - 1) * BLOCK_SIZE
-            drawBlock(blockValue, blockX, blockY)
+
+            local imageIndex = 1
+            if i == 1 then
+                imageIndex = 2
+            elseif i == 2 then
+                local otherJ = (j == 1) and 2 or 1
+                if blockValue == "H" and nextGroup1[2][otherJ] == "H" then
+                    imageIndex = 2
+                else
+                    imageIndex = 1
+                end
+            end
+
+            drawBlock(blockValue, blockX, blockY, imageIndex)
         end
     end
 
@@ -335,7 +361,8 @@ local function drawNextArea(nextStartX, nextStartY, nextWidth, nextHeight, borde
     local nextSegmentationScaleY = nextSegmentationHeight / nextSegmentationImage:getHeight()
 
     local nextSegmentationX = nextStartX - borderWidth
-    love.graphics.draw(nextSegmentationImage, nextSegmentationX, nextSegmentationY, 0, nextSegmentationScaleX, nextSegmentationScaleY)
+    love.graphics.draw(nextSegmentationImage, nextSegmentationX, nextSegmentationY, 0, nextSegmentationScaleX,
+        nextSegmentationScaleY)
 
     local bottomBoxStartY = nextStartY + boxHeight + gapHeight
     local bottomBoxWidth = nextWidth
@@ -351,7 +378,20 @@ local function drawNextArea(nextStartX, nextStartY, nextWidth, nextHeight, borde
             local blockValue = nextGroup2[i][j]
             local blockX = nextStartX + (j - 1) * BLOCK_SIZE
             local blockY = bottomBoxStartY + (i - 1) * BLOCK_SIZE
-            drawBlock(blockValue, blockX, blockY)
+
+            local imageIndex = 1
+            if i == 1 then
+                imageIndex = 2
+            elseif i == 2 then
+                local otherJ = (j == 1) and 2 or 1
+                if blockValue == "H" and nextGroup2[2][otherJ] == "H" then
+                    imageIndex = 2
+                else
+                    imageIndex = 1
+                end
+            end
+
+            drawBlock(blockValue, blockX, blockY, imageIndex)
         end
     end
 
