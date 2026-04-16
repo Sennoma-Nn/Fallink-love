@@ -93,13 +93,18 @@ for i = 1, 8 do
     end
 end
 
-local hImages = {}
-local vImages = {}
-local hgImage = nil
-local vgImage = nil
-local nextSpliterImage = nil
-local nextOperatingSpliterImage = nil
-local upArrowImage = nil
+local skin = "normal"
+
+local spr = {
+    h = {},
+    v = {},
+    hg = nil,
+    vg = nil,
+    nextSpliter = nil,
+    nextOperatingSpliter = nil,
+    upArrow = nil,
+}
+
 local BLOCK_SIZE = nil
 local BLOCK_WH = nil
 local switchStateCallback = nil
@@ -108,17 +113,41 @@ local function drawBlock(value, x, y, imageIndex)
     love.graphics.setColor(1, 1, 1)
 
     if value == "V" then
-        love.graphics.draw(vImages[imageIndex or 1], x, y, 0, BLOCK_WH, BLOCK_WH)
+        love.graphics.draw(spr.v[imageIndex or 1], x, y, 0, BLOCK_WH, BLOCK_WH)
     elseif value == "H" then
-        love.graphics.draw(hImages[imageIndex or 1], x, y, 0, BLOCK_WH, BLOCK_WH)
+        love.graphics.draw(spr.h[imageIndex or 1], x, y, 0, BLOCK_WH, BLOCK_WH)
     end
 end
 
 local function drawGhostBlock(value, x, y)
     if value == "V" then
-        love.graphics.draw(vgImage, x, y, 0, BLOCK_WH, BLOCK_WH)
+        love.graphics.draw(spr.vg, x, y, 0, BLOCK_WH, BLOCK_WH)
     elseif value == "H" then
-        love.graphics.draw(hgImage, x, y, 0, BLOCK_WH, BLOCK_WH)
+        love.graphics.draw(spr.hg, x, y, 0, BLOCK_WH, BLOCK_WH)
+    end
+end
+
+local function draw2x2BlockGroup(group, startX, startY)
+    for i = 1, 2 do
+        for j = 1, 2 do
+            local blockValue = group[i][j]
+            local blockX = startX + (j - 1) * BLOCK_SIZE
+            local blockY = startY + (i - 1) * BLOCK_SIZE
+
+            local imageIndex = 1
+            if i == 1 then
+                imageIndex = 2
+            elseif i == 2 then
+                local otherJ = (j == 1) and 2 or 1
+                if blockValue == "H" and group[2][otherJ] == "H" then
+                    imageIndex = 2
+                else
+                    imageIndex = 1
+                end
+            end
+
+            drawBlock(blockValue, blockX, blockY, imageIndex)
+        end
     end
 end
 
@@ -182,15 +211,15 @@ function load(switchState)
     switchStateCallback = switchState
 
     for i = 1, 4 do
-        hImages[i] = love.graphics.newImage("src/img/blocks/normal/h" .. i .. ".png")
-        vImages[i] = love.graphics.newImage("src/img/blocks/normal/v" .. i .. ".png")
+        spr.h[i] = love.graphics.newImage("src/img/skin/" .. skin .. "/h" .. i .. ".png")
+        spr.v[i] = love.graphics.newImage("src/img/skin/" .. skin .. "/v" .. i .. ".png")
     end
 
-    hgImage = love.graphics.newImage("src/img/blocks/normal/hg.png")
-    vgImage = love.graphics.newImage("src/img/blocks/normal/vg.png")
-    nextSpliterImage = love.graphics.newImage("src/img/game/nextSpliter.png")
-    nextOperatingSpliterImage = love.graphics.newImage("src/img/game/nextOperatingSpliter.png")
-    upArrowImage = love.graphics.newImage("src/img/blocks/normal/upArrow.png")
+    spr.hg = love.graphics.newImage("src/img/skin/" .. skin .. "/hg.png")
+    spr.vg = love.graphics.newImage("src/img/skin/" .. skin .. "/vg.png")
+    spr.nextSpliter = love.graphics.newImage("src/img/game/nextSpliter.png")
+    spr.nextOperatingSpliter = love.graphics.newImage("src/img/game/nextOperatingSpliter.png")
+    spr.upArrow = love.graphics.newImage("src/img/skin/" .. skin .. "/upArrow.png")
 
     well[8][4] = getRandomBlock()
     well[8][5] = getRandomBlock()
@@ -311,32 +340,13 @@ local function drawOperatingArea(operatingStartX, operatingStartY, operatingWidt
         true, true, false)
 
     local operatingGroup = nextAndOperating[1]
-    for i = 1, 2 do
-        for j = 1, 2 do
-            local blockValue = operatingGroup[i][j]
-            local blockX = operatingStartX + (j - 1) * BLOCK_SIZE
-            local blockY = operatingStartY + (i - 1) * BLOCK_SIZE
 
-            local imageIndex = 1
-            if i == 1 then
-                imageIndex = 2
-            elseif i == 2 then
-                local otherJ = (j == 1) and 2 or 1
-                if blockValue == "H" and operatingGroup[2][otherJ] == "H" then
-                    imageIndex = 2
-                else
-                    imageIndex = 1
-                end
-            end
-
-            drawBlock(blockValue, blockX, blockY, imageIndex)
-        end
-    end
+    draw2x2BlockGroup(operatingGroup, operatingStartX, operatingStartY)
 
     love.graphics.setColor(r, g, b, a)
 end
 
-local function drawNextArea(nextStartX, nextStartY, nextWidth, nextHeight, borderWidth)
+local function drawNextArea(nextStartX, nextStartY, nextWidth, borderWidth)
     local r, g, b, a = love.graphics.getColor()
 
     local boxHeight = 2 * BLOCK_SIZE
@@ -350,27 +360,8 @@ local function drawNextArea(nextStartX, nextStartY, nextWidth, nextHeight, borde
     drawBorder(nextStartX, topBoxStartY, topBoxWidth, topBoxHeight, borderWidth, { 1, 1, 1, 1 }, false, true, true, false)
 
     local nextGroup1 = nextAndOperating[2]
-    for i = 1, 2 do
-        for j = 1, 2 do
-            local blockValue = nextGroup1[i][j]
-            local blockX = nextStartX + (j - 1) * BLOCK_SIZE
-            local blockY = topBoxStartY + (i - 1) * BLOCK_SIZE
 
-            local imageIndex = 1
-            if i == 1 then
-                imageIndex = 2
-            elseif i == 2 then
-                local otherJ = (j == 1) and 2 or 1
-                if blockValue == "H" and nextGroup1[2][otherJ] == "H" then
-                    imageIndex = 2
-                else
-                    imageIndex = 1
-                end
-            end
-
-            drawBlock(blockValue, blockX, blockY, imageIndex)
-        end
-    end
+    draw2x2BlockGroup(nextGroup1, nextStartX, topBoxStartY)
 
     local bottomBoxStartY = nextStartY + boxHeight + gapHeight
     local bottomBoxWidth = nextWidth
@@ -381,27 +372,8 @@ local function drawNextArea(nextStartX, nextStartY, nextWidth, nextHeight, borde
         true, true)
 
     local nextGroup2 = nextAndOperating[3]
-    for i = 1, 2 do
-        for j = 1, 2 do
-            local blockValue = nextGroup2[i][j]
-            local blockX = nextStartX + (j - 1) * BLOCK_SIZE
-            local blockY = bottomBoxStartY + (i - 1) * BLOCK_SIZE
 
-            local imageIndex = 1
-            if i == 1 then
-                imageIndex = 2
-            elseif i == 2 then
-                local otherJ = (j == 1) and 2 or 1
-                if blockValue == "H" and nextGroup2[2][otherJ] == "H" then
-                    imageIndex = 2
-                else
-                    imageIndex = 1
-                end
-            end
-
-            drawBlock(blockValue, blockX, blockY, imageIndex)
-        end
-    end
+    draw2x2BlockGroup(nextGroup2, nextStartX, bottomBoxStartY)
 
     love.graphics.setColor(r, g, b, a)
 end
@@ -413,21 +385,21 @@ function drawSpliter(operatingStartX, operatingStartY, operatingHeight, borderWi
     local nextOperatingSpliterY = operatingStartY + operatingHeight
     local nextOperatingSpliterWidth = 2 * BLOCK_SIZE + 2 * borderWidth
     local nextOperatingSpliterHeight = BLOCK_SIZE
-    local nextOperatingSpliterScaleX = nextOperatingSpliterWidth / nextOperatingSpliterImage:getWidth()
-    local nextOperatingSpliterScaleY = nextOperatingSpliterHeight / nextOperatingSpliterImage:getHeight()
+    local nextOperatingSpliterScaleX = nextOperatingSpliterWidth / spr.nextOperatingSpliter:getWidth()
+    local nextOperatingSpliterScaleY = nextOperatingSpliterHeight / spr.nextOperatingSpliter:getHeight()
     local nextOperatingSpliterX = operatingStartX - borderWidth
 
-    love.graphics.draw(nextOperatingSpliterImage, nextOperatingSpliterX, nextOperatingSpliterY, 0,
+    love.graphics.draw(spr.nextOperatingSpliter, nextOperatingSpliterX, nextOperatingSpliterY, 0,
         nextOperatingSpliterScaleX, nextOperatingSpliterScaleY)
 
     local nextSpliterY = nextStartY + 2 * BLOCK_SIZE
     local nextSpliterWidth = 2 * BLOCK_SIZE + 2 * borderWidth
     local nextSpliterHeight = BLOCK_SIZE
-    local nextSpliterScaleX = nextSpliterWidth / nextSpliterImage:getWidth()
-    local nextSpliterScaleY = nextSpliterHeight / nextSpliterImage:getHeight()
+    local nextSpliterScaleX = nextSpliterWidth / spr.nextSpliter:getWidth()
+    local nextSpliterScaleY = nextSpliterHeight / spr.nextSpliter:getHeight()
     local nextSpliterX = nextStartX - borderWidth
 
-    love.graphics.draw(nextSpliterImage, nextSpliterX, nextSpliterY, 0, nextSpliterScaleX, nextSpliterScaleY)
+    love.graphics.draw(spr.nextSpliter, nextSpliterX, nextSpliterY, 0, nextSpliterScaleX, nextSpliterScaleY)
 
     love.graphics.setColor(r, g, b, a)
 end
@@ -437,12 +409,12 @@ local function drawUpArrow(wellStartX, wellStartY, wellHeight)
     local arrowY = wellStartY + wellHeight
     local arrowWidth = 2 * BLOCK_SIZE
     local arrowHeight = BLOCK_SIZE
-    local arrowScaleX = arrowWidth / upArrowImage:getWidth()
-    local arrowScaleY = arrowHeight / upArrowImage:getHeight()
+    local arrowScaleX = arrowWidth / spr.upArrow:getWidth()
+    local arrowScaleY = arrowHeight / spr.upArrow:getHeight()
     local arrowAlpha = GhostGroupInfo.alpha / 2 + 0.5
 
     love.graphics.setColor(1, 1, 1, arrowAlpha)
-    love.graphics.draw(upArrowImage, arrowX, arrowY, 0, arrowScaleX, arrowScaleY)
+    love.graphics.draw(spr.upArrow, arrowX, arrowY, 0, arrowScaleX, arrowScaleY)
 end
 
 function draw()
@@ -450,7 +422,7 @@ function draw()
     local screenHeight = love.graphics.getHeight()
 
     BLOCK_SIZE = screenHeight / 14
-    BLOCK_WH = BLOCK_SIZE / hImages[1]:getWidth()
+    BLOCK_WH = BLOCK_SIZE / spr.h[1]:getWidth()
 
     local borderWidth = BLOCK_SIZE / 6
     local totalCombinedWidth = 11 * BLOCK_SIZE
@@ -466,7 +438,6 @@ function draw()
     local nextStartX = operatingStartX
     local nextStartY = operatingStartY + operatingHeight + BLOCK_SIZE
     local nextWidth = 2 * BLOCK_SIZE
-    local nextHeight = 5 * BLOCK_SIZE
 
     love.graphics.setColor(0.1, 0.1, 0.1, 1)
     love.graphics.rectangle("fill", 0, 0, screenWidth, screenHeight)
@@ -477,10 +448,10 @@ function draw()
     drawUpArrow(wellStartX, startY, wellHeight)
     drawOperatingArea(operatingStartX, operatingStartY, operatingWidth, operatingHeight, borderWidth)
     drawSpliter(operatingStartX, operatingStartY, operatingHeight, borderWidth, nextStartX, nextStartY)
-    drawNextArea(nextStartX, nextStartY, nextWidth, nextHeight, borderWidth)
+    drawNextArea(nextStartX, nextStartY, nextWidth, borderWidth)
 end
 
-function toCW()
+local function toCW()
     if GhostGroupInfo.rotate == "0" then
         GhostGroupInfo.rotate = "R"
     elseif GhostGroupInfo.rotate == "R" then
@@ -492,7 +463,7 @@ function toCW()
     end
 end
 
-function toCCW()
+local function toCCW()
     if GhostGroupInfo.rotate == "0" then
         GhostGroupInfo.rotate = "L"
     elseif GhostGroupInfo.rotate == "L" then
