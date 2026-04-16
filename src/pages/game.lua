@@ -83,6 +83,7 @@ local GhostGroupInfo = {
     currentY = nil,
     angle = 0,
     targetY = nil,
+    alpha = 1.0,
 }
 
 for i = 1, 8 do
@@ -98,6 +99,7 @@ local hgImage = nil
 local vgImage = nil
 local nextSpliterImage = nil
 local nextOperatingSpliterImage = nil
+local upArrowImage = nil
 local BLOCK_SIZE = nil
 local BLOCK_WH = nil
 local switchStateCallback = nil
@@ -113,8 +115,6 @@ local function drawBlock(value, x, y, imageIndex)
 end
 
 local function drawGhostBlock(value, x, y)
-    love.graphics.setColor(1, 1, 1)
-
     if value == "V" then
         love.graphics.draw(vgImage, x, y, 0, BLOCK_WH, BLOCK_WH)
     elseif value == "H" then
@@ -190,6 +190,7 @@ function load(switchState)
     vgImage = love.graphics.newImage("src/img/blocks/normal/vg.png")
     nextSpliterImage = love.graphics.newImage("src/img/game/nextSpliter.png")
     nextOperatingSpliterImage = love.graphics.newImage("src/img/game/nextOperatingSpliter.png")
+    upArrowImage = love.graphics.newImage("src/img/blocks/normal/upArrow.png")
 
     well[8][4] = getRandomBlock()
     well[8][5] = getRandomBlock()
@@ -213,10 +214,19 @@ function update(dt)
     GhostGroupInfo.currentX = GhostGroupInfo.currentX + diffX / GHOST_MOVE_SPEED
 
     if GhostGroupInfo.currentY ~= nil then
-        local diffY = GhostGroupInfo.targetY - GhostGroupInfo.currentY
-        GhostGroupInfo.currentY = GhostGroupInfo.currentY + diffY / GHOST_MOVE_SPEED
+        if GhostGroupInfo.targetY ~= nil then
+            local diffY = GhostGroupInfo.targetY - GhostGroupInfo.currentY
+            GhostGroupInfo.currentY = GhostGroupInfo.currentY + diffY / GHOST_MOVE_SPEED
+            GhostGroupInfo.alpha = math.min(1.0, GhostGroupInfo.alpha + dt * 16)
+        else
+            GhostGroupInfo.alpha = math.max(0.0, GhostGroupInfo.alpha - dt * 16)
+            if GhostGroupInfo.alpha <= 0 then
+                GhostGroupInfo.currentY = nil
+            end
+        end
     else
         GhostGroupInfo.currentY = GhostGroupInfo.targetY
+        GhostGroupInfo.alpha = 0
     end
 
     GhostGroupInfo.angle = GhostGroupInfo.angle - GhostGroupInfo.angle / GHOST_MOVE_SPEED
@@ -224,6 +234,10 @@ end
 
 local function drawGhostGroup(wellStartX, wellStartY)
     if GhostGroupInfo.currentX == nil or GhostGroupInfo.currentY == nil then
+        return
+    end
+
+    if GhostGroupInfo.alpha <= 0 then
         return
     end
 
@@ -252,6 +266,8 @@ local function drawGhostGroup(wellStartX, wellStartY)
                 love.graphics.translate(blockCenterX, blockCenterY)
                 love.graphics.rotate(angleRad)
                 love.graphics.translate(-BLOCK_SIZE / 2, -BLOCK_SIZE / 2)
+
+                love.graphics.setColor(1, 1, 1, GhostGroupInfo.alpha)
                 drawGhostBlock(blockValue, 0, 0)
 
                 love.graphics.pop()
@@ -390,6 +406,45 @@ local function drawNextArea(nextStartX, nextStartY, nextWidth, nextHeight, borde
     love.graphics.setColor(r, g, b, a)
 end
 
+function drawSpliter(operatingStartX, operatingStartY, operatingHeight, borderWidth, nextStartX, nextStartY)
+    local r, g, b, a = love.graphics.getColor()
+    love.graphics.setColor(1, 1, 1, 1)
+
+    local nextOperatingSpliterY = operatingStartY + operatingHeight
+    local nextOperatingSpliterWidth = 2 * BLOCK_SIZE + 2 * borderWidth
+    local nextOperatingSpliterHeight = BLOCK_SIZE
+    local nextOperatingSpliterScaleX = nextOperatingSpliterWidth / nextOperatingSpliterImage:getWidth()
+    local nextOperatingSpliterScaleY = nextOperatingSpliterHeight / nextOperatingSpliterImage:getHeight()
+    local nextOperatingSpliterX = operatingStartX - borderWidth
+
+    love.graphics.draw(nextOperatingSpliterImage, nextOperatingSpliterX, nextOperatingSpliterY, 0,
+        nextOperatingSpliterScaleX, nextOperatingSpliterScaleY)
+
+    local nextSpliterY = nextStartY + 2 * BLOCK_SIZE
+    local nextSpliterWidth = 2 * BLOCK_SIZE + 2 * borderWidth
+    local nextSpliterHeight = BLOCK_SIZE
+    local nextSpliterScaleX = nextSpliterWidth / nextSpliterImage:getWidth()
+    local nextSpliterScaleY = nextSpliterHeight / nextSpliterImage:getHeight()
+    local nextSpliterX = nextStartX - borderWidth
+
+    love.graphics.draw(nextSpliterImage, nextSpliterX, nextSpliterY, 0, nextSpliterScaleX, nextSpliterScaleY)
+
+    love.graphics.setColor(r, g, b, a)
+end
+
+local function drawUpArrow(wellStartX, wellStartY, wellHeight)
+    local arrowX = wellStartX + (GhostGroupInfo.currentX - 1) * BLOCK_SIZE
+    local arrowY = wellStartY + wellHeight
+    local arrowWidth = 2 * BLOCK_SIZE
+    local arrowHeight = BLOCK_SIZE
+    local arrowScaleX = arrowWidth / upArrowImage:getWidth()
+    local arrowScaleY = arrowHeight / upArrowImage:getHeight()
+    local arrowAlpha = GhostGroupInfo.alpha / 2 + 0.5
+
+    love.graphics.setColor(1, 1, 1, arrowAlpha)
+    love.graphics.draw(upArrowImage, arrowX, arrowY, 0, arrowScaleX, arrowScaleY)
+end
+
 function draw()
     local screenWidth = love.graphics.getWidth()
     local screenHeight = love.graphics.getHeight()
@@ -419,28 +474,34 @@ function draw()
     drawWell(wellStartX, startY, wellWidth, wellHeight, borderWidth)
     drawGhostGroup(wellStartX, startY)
     drawWellBlocks(wellStartX, startY)
+    drawUpArrow(wellStartX, startY, wellHeight)
     drawOperatingArea(operatingStartX, operatingStartY, operatingWidth, operatingHeight, borderWidth)
-
-    local nextOperatingSpliterY = operatingStartY + operatingHeight
-    local nextOperatingSpliterWidth = 2 * BLOCK_SIZE + 2 * borderWidth
-    local nextOperatingSpliterHeight = BLOCK_SIZE
-    local nextOperatingSpliterScaleX = nextOperatingSpliterWidth / nextOperatingSpliterImage:getWidth()
-    local nextOperatingSpliterScaleY = nextOperatingSpliterHeight / nextOperatingSpliterImage:getHeight()
-    local nextOperatingSpliterX = operatingStartX - borderWidth
-
-    love.graphics.draw(nextOperatingSpliterImage, nextOperatingSpliterX, nextOperatingSpliterY, 0,
-        nextOperatingSpliterScaleX, nextOperatingSpliterScaleY)
-
-    local nextSpliterY = nextStartY + 2 * BLOCK_SIZE
-    local nextSpliterWidth = 2 * BLOCK_SIZE + 2 * borderWidth
-    local nextSpliterHeight = BLOCK_SIZE
-    local nextSpliterScaleX = nextSpliterWidth / nextSpliterImage:getWidth()
-    local nextSpliterScaleY = nextSpliterHeight / nextSpliterImage:getHeight()
-    local nextSpliterX = nextStartX - borderWidth
-
-    love.graphics.draw(nextSpliterImage, nextSpliterX, nextSpliterY, 0, nextSpliterScaleX, nextSpliterScaleY)
-
+    drawSpliter(operatingStartX, operatingStartY, operatingHeight, borderWidth, nextStartX, nextStartY)
     drawNextArea(nextStartX, nextStartY, nextWidth, nextHeight, borderWidth)
+end
+
+function toCW()
+    if GhostGroupInfo.rotate == "0" then
+        GhostGroupInfo.rotate = "R"
+    elseif GhostGroupInfo.rotate == "R" then
+        GhostGroupInfo.rotate = "2"
+    elseif GhostGroupInfo.rotate == "2" then
+        GhostGroupInfo.rotate = "L"
+    elseif GhostGroupInfo.rotate == "L" then
+        GhostGroupInfo.rotate = "0"
+    end
+end
+
+function toCCW()
+    if GhostGroupInfo.rotate == "0" then
+        GhostGroupInfo.rotate = "L"
+    elseif GhostGroupInfo.rotate == "L" then
+        GhostGroupInfo.rotate = "2"
+    elseif GhostGroupInfo.rotate == "2" then
+        GhostGroupInfo.rotate = "R"
+    elseif GhostGroupInfo.rotate == "R" then
+        GhostGroupInfo.rotate = "0"
+    end
 end
 
 function keypressed(key)
@@ -455,28 +516,56 @@ function keypressed(key)
             GhostGroupInfo.targetY = calculateGhostPosition(GhostGroupInfo.x)
         end
     elseif key == "up" or key == "x" then
-        if GhostGroupInfo.rotate == "0" then
-            GhostGroupInfo.rotate = "R"
-        elseif GhostGroupInfo.rotate == "R" then
-            GhostGroupInfo.rotate = "2"
-        elseif GhostGroupInfo.rotate == "2" then
-            GhostGroupInfo.rotate = "L"
-        elseif GhostGroupInfo.rotate == "L" then
-            GhostGroupInfo.rotate = "0"
-        end
+        toCW()
         GhostGroupInfo.angle = 11.25
     elseif key == "z" then
-        if GhostGroupInfo.rotate == "0" then
-            GhostGroupInfo.rotate = "L"
-        elseif GhostGroupInfo.rotate == "L" then
-            GhostGroupInfo.rotate = "2"
-        elseif GhostGroupInfo.rotate == "2" then
-            GhostGroupInfo.rotate = "R"
-        elseif GhostGroupInfo.rotate == "R" then
-            GhostGroupInfo.rotate = "0"
-        end
-        GhostGroupInfo.angle = -11.25
+        toCCW()
+    elseif key == "down" then
+        placeBlocks()
     end
+end
+
+function getNewBlockGroupAndReset()
+    nextAndOperating[1] = nextAndOperating[2]
+    nextAndOperating[2] = nextAndOperating[3]
+    nextAndOperating[3] = getRandomBlockGroup()
+
+    GhostGroupInfo.x = 4
+    GhostGroupInfo.rotate = "0"
+    GhostGroupInfo.angle = 0
+    GhostGroupInfo.targetY = calculateGhostPosition(4)
+    GhostGroupInfo.currentX = 4
+    GhostGroupInfo.currentY = GhostGroupInfo.targetY
+    GhostGroupInfo.alpha = 0
+end
+
+function placeBlocks()
+    if GhostGroupInfo.targetY == nil then
+        return
+    end
+
+    local currentGroup = nextAndOperating[1]
+    if not currentGroup then
+        return
+    end
+
+    local rotatedGroup = rotateBlockGroup(currentGroup, GhostGroupInfo.rotate)
+
+    for i = 1, 2 do
+        for j = 1, 2 do
+            local blockValue = rotatedGroup[i][j]
+            if blockValue and blockValue ~= 0 then
+                local wellRow = GhostGroupInfo.targetY + (i - 1)
+                local wellCol = GhostGroupInfo.x + (j - 1)
+
+                if wellRow >= 1 and wellRow <= 8 and wellCol >= 1 and wellCol <= 8 then
+                    well[wellRow][wellCol] = blockValue
+                end
+            end
+        end
+    end
+
+    getNewBlockGroupAndReset()
 end
 
 function mousepressed(x, y, button)
