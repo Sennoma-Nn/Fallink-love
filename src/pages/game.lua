@@ -1,7 +1,5 @@
 local well = {}
 
-local GHOST_MOVE_SPEED = 4
-
 math.randomseed(os.time())
 
 function getRandomBlock()
@@ -40,10 +38,7 @@ function rotateBlockGroup(group, direction)
     local newGroup = { {}, {} }
 
     if direction == "0" then
-        newGroup[1][1] = group[1][1]
-        newGroup[1][2] = group[1][2]
-        newGroup[2][1] = group[2][1]
-        newGroup[2][2] = group[2][2]
+        return group
     elseif direction == "R" then
         newGroup[1][2] = invertBlock(group[1][1])
         newGroup[2][2] = invertBlock(group[1][2])
@@ -69,8 +64,6 @@ function invertBlock(block)
         return "V"
     elseif block == "V" then
         return "H"
-    else
-        return block
     end
 end
 
@@ -85,6 +78,35 @@ local GhostGroupInfo = {
     targetY = nil,
     alpha = 1.0,
 }
+
+function resetGhostState()
+    GhostGroupInfo.x = 4
+    GhostGroupInfo.rotate = "0"
+    GhostGroupInfo.angle = 0
+    GhostGroupInfo.targetY = calculateGhostPosition(4)
+    GhostGroupInfo.currentX = 4
+    GhostGroupInfo.currentY = GhostGroupInfo.targetY
+    GhostGroupInfo.alpha = 1.0
+end
+
+function getNewBlockGroupAndReset()
+    addNewBlockGroup()
+    resetGhostState()
+end
+
+local GHOST_MOVE_SPEED = 4
+
+local fallingBlocks = {}
+local isFalling = false
+local FALL_SPEED = 4
+
+local score = 0
+local clearCount = 0
+local chainTotal = 0
+local renCount = 0
+local isClearing = false
+local clearPause = 0
+local isInChain = false
 
 for i = 1, 8 do
     well[i] = {}
@@ -181,11 +203,7 @@ local function drawBorder(startX, startY, width, height, borderWidth, color, has
     love.graphics.setColor(r, g, b, a)
 end
 
-local function calculateGhostPosition(ghostX)
-    if ghostX == nil or ghostX < 1 or ghostX > 7 then
-        return nil
-    end
-
+function calculateGhostPosition(ghostX)
     local highestRow = 9
     for col = ghostX, ghostX + 1 do
         for row = 1, 8 do
@@ -207,6 +225,180 @@ local function calculateGhostPosition(ghostX)
     return ghostY
 end
 
+local function getConnectedCount(row, col)
+    local value = well[row][col]
+    local count = 1
+
+    if value == "H" then
+        local c = col - 1
+        while c >= 1 and well[row][c] == "H" do
+            count = count + 1
+            c = c - 1
+        end
+        c = col + 1
+        while c <= 8 and well[row][c] == "H" do
+            count = count + 1
+            c = c + 1
+        end
+    else
+        local r = row - 1
+        while r >= 1 and well[r][col] == "V" do
+            count = count + 1
+            r = r - 1
+        end
+        r = row + 1
+        while r <= 8 and well[r][col] == "V" do
+            count = count + 1
+            r = r + 1
+        end
+    end
+
+    return math.min(count, 4)
+end
+
+local function clearMatches()
+    local clearedAny = false
+    local totalCleared = 0
+
+    for row = 1, 8 do
+        local col = 1
+        while col <= 8 do
+            if well[row][col] == "H" then
+                local start = col
+                while col <= 8 and well[row][col] == "H" do
+                    col = col + 1
+                end
+                local len = col - start
+
+                if len >= 4 then
+                    for i = start, col - 1 do
+                        well[row][i] = 0
+                    end
+                    clearCount = clearCount + 1
+                    totalCleared = totalCleared + len
+                    clearedAny = true
+                end
+            else
+                col = col + 1
+            end
+        end
+    end
+
+    for col = 1, 8 do
+        local row = 1
+        while row <= 8 do
+            if well[row][col] == "V" then
+                local start = row
+                while row <= 8 and well[row][col] == "V" do
+                    row = row + 1
+                end
+                local len = row - start
+
+                if len >= 4 then
+                    for i = start, row - 1 do
+                        well[i][col] = 0
+                    end
+                    clearCount = clearCount + 1
+                    totalCleared = totalCleared + len
+                    clearedAny = true
+                end
+            else
+                row = row + 1
+            end
+        end
+    end
+
+    if clearedAny then
+        chainTotal = chainTotal + totalCleared
+
+        if renCount == 0 then
+            renCount = 1
+        else
+            renCount = renCount + 1
+        end
+
+        clearPause = 32
+    end
+
+    return clearedAny, totalCleared
+end
+
+local function checkFallingBlocks()
+    fallingBlocks = {}
+
+    for col = 1, 8 do
+        local emptySpaces = 0
+
+        for row = 8, 1, -1 do
+            if well[row][col] == 0 then
+                emptySpaces = emptySpaces + 1
+            else
+                if emptySpaces > 0 then
+                    local connectedCount = getConnectedCount(row, col)
+                    table.insert(fallingBlocks, {
+                        row = row,
+                        col = col,
+                        value = well[row][col],
+                        targetRow = row + emptySpaces,
+                        progress = 0,
+                        connectedCount = connectedCount,
+                    })
+                end
+            end
+        end
+    end
+
+    if #fallingBlocks > 0 then
+        isFalling = true
+        return true
+    end
+
+    return false
+end
+
+local function completeFalling()
+    for _, block in ipairs(fallingBlocks) do
+        well[block.row][block.col] = 0
+    end
+
+    for _, block in ipairs(fallingBlocks) do
+        well[block.targetRow][block.col] = block.value
+    end
+
+    fallingBlocks = {}
+    isFalling = false
+
+    local cleared = clearMatches()
+
+    if cleared then
+    else
+        local needsFall = checkFallingBlocks()
+        if not needsFall then
+            isInChain = false
+            resetGhostState()
+        end
+    end
+end
+
+local function updateFallingAnimation(dt)
+    local allFinished = true
+
+    for i, block in ipairs(fallingBlocks) do
+        local fallDistance = block.targetRow - block.row
+        block.progress = block.progress + (1 / FALL_SPEED) / fallDistance
+
+        if block.progress >= 1.0 then
+            block.progress = 1.0
+        else
+            allFinished = false
+        end
+    end
+
+    if allFinished then
+        completeFalling()
+    end
+end
+
 function load(switchState)
     switchStateCallback = switchState
 
@@ -221,16 +413,7 @@ function load(switchState)
     spr.nextOperatingSpliter = love.graphics.newImage("src/img/game/nextOperatingSpliter.png")
     spr.upArrow = love.graphics.newImage("src/img/skin/" .. skin .. "/upArrow.png")
 
-    well[8][4] = getRandomBlock()
-    well[8][5] = getRandomBlock()
-    well[7][5] = getRandomBlock()
-
-    GhostGroupInfo.x = 4
-    GhostGroupInfo.rotate = "0"
-    GhostGroupInfo.currentX = 4
-    GhostGroupInfo.currentY = nil
-    GhostGroupInfo.angle = 0
-    GhostGroupInfo.targetY = calculateGhostPosition(4)
+    resetGhostState()
 
     for _ = 1, 3 do
         local newBlockGroup = getRandomBlockGroup()
@@ -239,26 +422,60 @@ function load(switchState)
 end
 
 function update(dt)
-    local diffX = GhostGroupInfo.x - GhostGroupInfo.currentX
-    GhostGroupInfo.currentX = GhostGroupInfo.currentX + diffX / GHOST_MOVE_SPEED
+    if clearPause > 0 then
+        clearPause = clearPause - 1
 
-    if GhostGroupInfo.currentY ~= nil then
-        if GhostGroupInfo.targetY ~= nil then
-            local diffY = GhostGroupInfo.targetY - GhostGroupInfo.currentY
-            GhostGroupInfo.currentY = GhostGroupInfo.currentY + diffY / GHOST_MOVE_SPEED
-            GhostGroupInfo.alpha = math.min(1.0, GhostGroupInfo.alpha + dt * 16)
-        else
-            GhostGroupInfo.alpha = math.max(0.0, GhostGroupInfo.alpha - dt * 16)
-            if GhostGroupInfo.alpha <= 0 then
-                GhostGroupInfo.currentY = nil
+        if clearPause <= 0 then
+            local needsFall = checkFallingBlocks()
+
+            if not needsFall then
+                local clearedAny, _ = clearMatches()
+
+                if not clearedAny then
+                    if chainTotal > 0 then
+                        score = score + chainTotal * chainTotal
+                        chainTotal = 0
+                        renCount = 0
+                    end
+                    isInChain = false
+                    resetGhostState()
+                end
             end
         end
-    else
-        GhostGroupInfo.currentY = GhostGroupInfo.targetY
-        GhostGroupInfo.alpha = 0
+        return
     end
 
-    GhostGroupInfo.angle = GhostGroupInfo.angle - GhostGroupInfo.angle / GHOST_MOVE_SPEED
+    if isFalling then
+        updateFallingAnimation(dt)
+    else
+        if clearPause <= 0 and isInChain then
+            isInChain = false
+            resetGhostState()
+        end
+
+        if not isInChain and clearPause == 0 then
+            local diffX = GhostGroupInfo.x - GhostGroupInfo.currentX
+            GhostGroupInfo.currentX = GhostGroupInfo.currentX + diffX / GHOST_MOVE_SPEED
+
+            if GhostGroupInfo.currentY ~= nil then
+                if GhostGroupInfo.targetY ~= nil then
+                    local diffY = GhostGroupInfo.targetY - GhostGroupInfo.currentY
+                    GhostGroupInfo.currentY = GhostGroupInfo.currentY + diffY / GHOST_MOVE_SPEED
+                    GhostGroupInfo.alpha = math.min(1.0, GhostGroupInfo.alpha + dt * 16)
+                else
+                    GhostGroupInfo.alpha = math.max(0.0, GhostGroupInfo.alpha - dt * 16)
+                    if GhostGroupInfo.alpha <= 0 then
+                        GhostGroupInfo.currentY = nil
+                    end
+                end
+            else
+                GhostGroupInfo.currentY = GhostGroupInfo.targetY
+                GhostGroupInfo.alpha = 0
+            end
+
+            GhostGroupInfo.angle = GhostGroupInfo.angle - GhostGroupInfo.angle / GHOST_MOVE_SPEED
+        end
+    end
 end
 
 local function drawGhostGroup(wellStartX, wellStartY)
@@ -317,15 +534,30 @@ end
 local function drawWellBlocks(startX, startY)
     local r, g, b, a = love.graphics.getColor()
 
+    local fallingPositions = {}
+    for _, block in ipairs(fallingBlocks) do
+        fallingPositions[block.row * 10 + block.col] = true
+    end
+
     for i = 1, 8 do
         for j = 1, 8 do
             local value = well[i][j]
             if value ~= 0 then
-                local x = startX + (j - 1) * BLOCK_SIZE
-                local y = startY + (i - 1) * BLOCK_SIZE
-                drawBlock(value, x, y)
+                if not fallingPositions[i * 10 + j] then
+                    local x = startX + (j - 1) * BLOCK_SIZE
+                    local y = startY + (i - 1) * BLOCK_SIZE
+                    local connectedCount = getConnectedCount(i, j)
+                    drawBlock(value, x, y, connectedCount)
+                end
             end
         end
+    end
+
+    for _, block in ipairs(fallingBlocks) do
+        local currentRow = block.row + (block.targetRow - block.row) * block.progress
+        local x = startX + (block.col - 1) * BLOCK_SIZE
+        local y = startY + (currentRow - 1) * BLOCK_SIZE
+        drawBlock(block.value, x, y, block.connectedCount)
     end
 
     love.graphics.setColor(r, g, b, a)
@@ -476,13 +708,17 @@ local function toCCW()
 end
 
 function keypressed(key)
+    if isFalling or clearPause > 0 or isInChain then
+        return
+    end
+
     if key == "left" then
-        if GhostGroupInfo.x ~= nil and GhostGroupInfo.x > 1 then
+        if GhostGroupInfo.x > 1 then
             GhostGroupInfo.x = GhostGroupInfo.x - 1
             GhostGroupInfo.targetY = calculateGhostPosition(GhostGroupInfo.x)
         end
     elseif key == "right" then
-        if GhostGroupInfo.x ~= nil and GhostGroupInfo.x < 7 then
+        if GhostGroupInfo.x < 7 then
             GhostGroupInfo.x = GhostGroupInfo.x + 1
             GhostGroupInfo.targetY = calculateGhostPosition(GhostGroupInfo.x)
         end
@@ -491,23 +727,16 @@ function keypressed(key)
         GhostGroupInfo.angle = 11.25
     elseif key == "z" then
         toCCW()
+        GhostGroupInfo.angle = -11.25
     elseif key == "down" then
         placeBlocks()
     end
 end
 
-function getNewBlockGroupAndReset()
+function addNewBlockGroup()
     nextAndOperating[1] = nextAndOperating[2]
     nextAndOperating[2] = nextAndOperating[3]
     nextAndOperating[3] = getRandomBlockGroup()
-
-    GhostGroupInfo.x = 4
-    GhostGroupInfo.rotate = "0"
-    GhostGroupInfo.angle = 0
-    GhostGroupInfo.targetY = calculateGhostPosition(4)
-    GhostGroupInfo.currentX = 4
-    GhostGroupInfo.currentY = GhostGroupInfo.targetY
-    GhostGroupInfo.alpha = 0
 end
 
 function placeBlocks()
@@ -516,27 +745,35 @@ function placeBlocks()
     end
 
     local currentGroup = nextAndOperating[1]
-    if not currentGroup then
-        return
-    end
-
     local rotatedGroup = rotateBlockGroup(currentGroup, GhostGroupInfo.rotate)
 
     for i = 1, 2 do
         for j = 1, 2 do
             local blockValue = rotatedGroup[i][j]
-            if blockValue and blockValue ~= 0 then
-                local wellRow = GhostGroupInfo.targetY + (i - 1)
-                local wellCol = GhostGroupInfo.x + (j - 1)
+            local wellRow = GhostGroupInfo.targetY + (i - 1)
+            local wellCol = GhostGroupInfo.x + (j - 1)
 
-                if wellRow >= 1 and wellRow <= 8 and wellCol >= 1 and wellCol <= 8 then
-                    well[wellRow][wellCol] = blockValue
-                end
+            if wellRow >= 1 and wellRow <= 8 and wellCol >= 1 and wellCol <= 8 then
+                well[wellRow][wellCol] = blockValue
             end
         end
     end
 
-    getNewBlockGroupAndReset()
+    addNewBlockGroup()
+
+    GhostGroupInfo.alpha = 0
+    GhostGroupInfo.currentY = nil
+
+    local cleared, clearedCount = clearMatches()
+
+    if cleared then
+        isInChain = true
+    else
+        local needsFall = checkFallingBlocks()
+        if not needsFall then
+            resetGhostState()
+        end
+    end
 end
 
 function mousepressed(x, y, button)
