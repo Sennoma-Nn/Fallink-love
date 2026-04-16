@@ -92,16 +92,12 @@ for i = 1, 8 do
     end
 end
 
-for _ = 1, 3 do
-    local newBlockGroup = getRandomBlockGroup()
-    table.insert(nextAndOperating, newBlockGroup)
-end
-
 local hImages = {}
 local vImages = {}
 local hgImage = nil
 local vgImage = nil
-local nextSegmentationImage = nil
+local nextSpliterImage = nil
+local nextOperatingSpliterImage = nil
 local BLOCK_SIZE = nil
 local BLOCK_WH = nil
 local switchStateCallback = nil
@@ -192,7 +188,8 @@ function load(switchState)
 
     hgImage = love.graphics.newImage("src/img/blocks/normal/hg.png")
     vgImage = love.graphics.newImage("src/img/blocks/normal/vg.png")
-    nextSegmentationImage = love.graphics.newImage("src/img/game/nextSegmentation.png")
+    nextSpliterImage = love.graphics.newImage("src/img/game/nextSpliter.png")
+    nextOperatingSpliterImage = love.graphics.newImage("src/img/game/nextOperatingSpliter.png")
 
     well[8][4] = getRandomBlock()
     well[8][5] = getRandomBlock()
@@ -204,6 +201,11 @@ function load(switchState)
     GhostGroupInfo.currentY = nil
     GhostGroupInfo.angle = 0
     GhostGroupInfo.targetY = calculateGhostPosition(4)
+
+    for _ = 1, 3 do
+        local newBlockGroup = getRandomBlockGroup()
+        table.insert(nextAndOperating, newBlockGroup)
+    end
 end
 
 function update(dt)
@@ -290,7 +292,7 @@ local function drawOperatingArea(operatingStartX, operatingStartY, operatingWidt
     drawAreaBackground(operatingStartX, operatingStartY, operatingWidth, operatingHeight)
     drawBorder(operatingStartX, operatingStartY, operatingWidth, operatingHeight, borderWidth, { 1, 0.8, 0.4, 1 },
         true,
-        true, true, true)
+        true, true, false)
 
     local operatingGroup = nextAndOperating[1]
     for i = 1, 2 do
@@ -329,7 +331,7 @@ local function drawNextArea(nextStartX, nextStartY, nextWidth, nextHeight, borde
     local topBoxHeight = boxHeight
 
     drawAreaBackground(nextStartX, topBoxStartY, topBoxWidth, topBoxHeight)
-    drawBorder(nextStartX, topBoxStartY, topBoxWidth, topBoxHeight, borderWidth, { 1, 1, 1, 1 }, true, true, true, false)
+    drawBorder(nextStartX, topBoxStartY, topBoxWidth, topBoxHeight, borderWidth, { 1, 1, 1, 1 }, false, true, true, false)
 
     local nextGroup1 = nextAndOperating[2]
     for i = 1, 2 do
@@ -353,16 +355,6 @@ local function drawNextArea(nextStartX, nextStartY, nextWidth, nextHeight, borde
             drawBlock(blockValue, blockX, blockY, imageIndex)
         end
     end
-
-    local nextSegmentationY = nextStartY + boxHeight
-    local nextSegmentationWidth = 2 * BLOCK_SIZE + 2 * borderWidth
-    local nextSegmentationHeight = BLOCK_SIZE
-    local nextSegmentationScaleX = nextSegmentationWidth / nextSegmentationImage:getWidth()
-    local nextSegmentationScaleY = nextSegmentationHeight / nextSegmentationImage:getHeight()
-
-    local nextSegmentationX = nextStartX - borderWidth
-    love.graphics.draw(nextSegmentationImage, nextSegmentationX, nextSegmentationY, 0, nextSegmentationScaleX,
-        nextSegmentationScaleY)
 
     local bottomBoxStartY = nextStartY + boxHeight + gapHeight
     local bottomBoxWidth = nextWidth
@@ -428,6 +420,26 @@ function draw()
     drawGhostGroup(wellStartX, startY)
     drawWellBlocks(wellStartX, startY)
     drawOperatingArea(operatingStartX, operatingStartY, operatingWidth, operatingHeight, borderWidth)
+
+    local nextOperatingSpliterY = operatingStartY + operatingHeight
+    local nextOperatingSpliterWidth = 2 * BLOCK_SIZE + 2 * borderWidth
+    local nextOperatingSpliterHeight = BLOCK_SIZE
+    local nextOperatingSpliterScaleX = nextOperatingSpliterWidth / nextOperatingSpliterImage:getWidth()
+    local nextOperatingSpliterScaleY = nextOperatingSpliterHeight / nextOperatingSpliterImage:getHeight()
+    local nextOperatingSpliterX = operatingStartX - borderWidth
+
+    love.graphics.draw(nextOperatingSpliterImage, nextOperatingSpliterX, nextOperatingSpliterY, 0,
+        nextOperatingSpliterScaleX, nextOperatingSpliterScaleY)
+
+    local nextSpliterY = nextStartY + 2 * BLOCK_SIZE
+    local nextSpliterWidth = 2 * BLOCK_SIZE + 2 * borderWidth
+    local nextSpliterHeight = BLOCK_SIZE
+    local nextSpliterScaleX = nextSpliterWidth / nextSpliterImage:getWidth()
+    local nextSpliterScaleY = nextSpliterHeight / nextSpliterImage:getHeight()
+    local nextSpliterX = nextStartX - borderWidth
+
+    love.graphics.draw(nextSpliterImage, nextSpliterX, nextSpliterY, 0, nextSpliterScaleX, nextSpliterScaleY)
+
     drawNextArea(nextStartX, nextStartY, nextWidth, nextHeight, borderWidth)
 end
 
