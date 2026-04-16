@@ -105,6 +105,7 @@ local FALL_SPEED = 4
 
 local score = 0
 local clearCount = 0
+local settledClearCount = 0
 local chainTotal = 0
 local renCount = 0
 local isClearing = false
@@ -263,6 +264,7 @@ end
 local function finalizeChain()
     if chainTotal > 0 then
         score = score + (chainTotal * chainTotal)
+        settledClearCount = clearCount
         chainTotal = 0
         renCount = 0
     end
@@ -698,8 +700,8 @@ function draw()
         local scoreY = nextBottomY - totalTextHeight
 
         local avgClearScore = 0
-        if clearCount > 0 then
-            avgClearScore = score / clearCount
+        if settledClearCount > 0 then
+            avgClearScore = score / settledClearCount
         end
 
         love.graphics.print("SCORE: " .. score, scoreX, scoreY)
