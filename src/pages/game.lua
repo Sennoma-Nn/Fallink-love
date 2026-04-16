@@ -1,3 +1,6 @@
+local config = require("src.game_config")
+local uiButton = require("src.ui")
+
 local well = {}
 
 math.randomseed(os.time())
@@ -130,6 +133,7 @@ local spr = {
 local BLOCK_SIZE = nil
 local BLOCK_WH = nil
 local switchStateCallback = nil
+local uiFont = nil
 
 local function drawBlock(value, x, y, imageIndex)
     love.graphics.setColor(1, 1, 1)
@@ -256,6 +260,15 @@ local function getConnectedCount(row, col)
     return math.min(count, 4)
 end
 
+local function finalizeChain()
+    if chainTotal > 0 then
+        score = score + (chainTotal * chainTotal)
+        chainTotal = 0
+        renCount = 0
+    end
+    isInChain = false
+end
+
 local function clearMatches()
     local clearedAny = false
     local totalCleared = 0
@@ -371,10 +384,11 @@ local function completeFalling()
     local cleared = clearMatches()
 
     if cleared then
+        isInChain = true
     else
         local needsFall = checkFallingBlocks()
         if not needsFall then
-            isInChain = false
+            finalizeChain()
             resetGhostState()
         end
     end
@@ -412,6 +426,7 @@ function load(switchState)
     spr.nextSpliter = love.graphics.newImage("src/img/game/nextSpliter.png")
     spr.nextOperatingSpliter = love.graphics.newImage("src/img/game/nextOperatingSpliter.png")
     spr.upArrow = love.graphics.newImage("src/img/skin/" .. skin .. "/upArrow.png")
+    uiFont = uiButton.getFont("small")
 
     resetGhostState()
 
@@ -424,21 +439,15 @@ end
 function update(dt)
     if clearPause > 0 then
         clearPause = clearPause - 1
-
         if clearPause <= 0 then
-            local needsFall = checkFallingBlocks()
-
-            if not needsFall then
+            if not checkFallingBlocks() then
                 local clearedAny, _ = clearMatches()
-
                 if not clearedAny then
-                    if chainTotal > 0 then
-                        score = score + chainTotal * chainTotal
-                        chainTotal = 0
-                        renCount = 0
-                    end
-                    isInChain = false
+                    finalizeChain()
                     resetGhostState()
+                else
+                    isInChain = true
+                    return
                 end
             end
         end
@@ -448,11 +457,6 @@ function update(dt)
     if isFalling then
         updateFallingAnimation(dt)
     else
-        if clearPause <= 0 and isInChain then
-            isInChain = false
-            resetGhostState()
-        end
-
         if not isInChain and clearPause == 0 then
             local diffX = GhostGroupInfo.x - GhostGroupInfo.currentX
             GhostGroupInfo.currentX = GhostGroupInfo.currentX + diffX / GHOST_MOVE_SPEED
@@ -681,6 +685,27 @@ function draw()
     drawOperatingArea(operatingStartX, operatingStartY, operatingWidth, operatingHeight, borderWidth)
     drawSpliter(operatingStartX, operatingStartY, operatingHeight, borderWidth, nextStartX, nextStartY)
     drawNextArea(nextStartX, nextStartY, nextWidth, borderWidth)
+
+    if uiFont then
+        love.graphics.setColor(1, 1, 1, 1)
+        love.graphics.setFont(uiFont)
+
+        local scoreX = nextStartX + nextWidth + BLOCK_SIZE
+        local nextTotalHeight = 5 * BLOCK_SIZE
+        local nextBottomY = nextStartY + nextTotalHeight
+        local lineHeight = uiFont:getHeight() + 5
+        local totalTextHeight = lineHeight * 3
+        local scoreY = nextBottomY - totalTextHeight
+
+        local avgClearScore = 0
+        if clearCount > 0 then
+            avgClearScore = score / clearCount
+        end
+
+        love.graphics.print("SCORE: " .. score, scoreX, scoreY)
+        love.graphics.print("CLEAR: " .. clearCount, scoreX, scoreY + lineHeight)
+        love.graphics.print("AVGCS: " .. string.format("%.2f", avgClearScore), scoreX, scoreY + lineHeight * 2)
+    end
 end
 
 local function toCW()
@@ -771,7 +796,12 @@ function placeBlocks()
     else
         local needsFall = checkFallingBlocks()
         if not needsFall then
+            if isInChain then
+                finalizeChain()
+            end
             resetGhostState()
+        else
+            isInChain = true
         end
     end
 end
